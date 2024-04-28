@@ -1,11 +1,9 @@
 package com.github.wolray.seq;
 
-import java.util.*;
+import com.github.wolray.seq.triple.TripleFunction;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.RecursiveTask;
 import java.util.function.*;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 /**
  * @author wolray
@@ -37,7 +35,7 @@ public interface Lazy<T> extends Supplier<T> {
         };
     }
 
-    static <A, B, C, T> Lazy<T> of(Supplier<A> s1, Supplier<B> s2, Supplier<C> s3, Function3<A, B, C, T> function) {
+    static <A, B, C, T> Lazy<T> of(Supplier<A> s1, Supplier<B> s2, Supplier<C> s3, TripleFunction<A, B, C, T> function) {
         return new Mutable<T>(null) {
             @Override
             protected void eval() {

@@ -5,12 +5,12 @@ import java.util.Queue;
 /**
  * @author wolray
  */
-public interface SeqQueue<T> extends SizedSeq<T>, Queue<T> {
-    static <T> SeqQueue<T> of(Queue<T> queue) {
-        return queue instanceof SeqQueue ? (SeqQueue<T>)queue : new Proxy<>(queue);
+public interface QueueSeq<T> extends SizedSeq<T>, Queue<T> {
+    static <T> QueueSeq<T> of(Queue<T> queue) {
+        return queue instanceof QueueSeq ? (QueueSeq<T>)queue : new Proxy<>(queue);
     }
 
-    class Proxy<T> extends SeqCollection.Proxy<T, Queue<T>> implements SeqQueue<T> {
+    class Proxy<T> extends CollectionSeq.Proxy<T, Queue<T>> implements QueueSeq<T> {
         public Proxy(Queue<T> backer) {
             super(backer);
         }

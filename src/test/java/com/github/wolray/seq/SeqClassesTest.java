@@ -1,5 +1,6 @@
 package com.github.wolray.seq;
 
+import com.github.wolray.seq.pair.Pair;
 import guru.nidi.graphviz.attribute.Font;
 import guru.nidi.graphviz.attribute.Rank;
 import guru.nidi.graphviz.attribute.Shape;
@@ -18,10 +19,10 @@ import java.util.Map;
  * @author wolray
  */
 public class SeqClassesTest {
-    public static final SeqExpand<Class<?>> CLASS_EXPAND = cls -> Seq.of(cls.getInterfaces()).append(cls.getSuperclass());
+    public static final ExpandSeq<Class<?>> CLASS_EXPAND = cls -> Seq.of(cls.getInterfaces()).append(cls.getSuperclass());
 
     public static Graph graph(Map<Class<?>, ArraySeq<Class<?>>> map) {
-        Map<Class<?>, Pair<Class<?>, Node>> nodeMap = SeqMap.of(map).mapByValue((cls, parents) -> {
+        Map<Class<?>, Pair<Class<?>, Node>> nodeMap = MapSeq.of(map).mapByValue((cls, parents) -> {
             Node nd = Factory.node(cls.getSimpleName());
             if (!cls.isInterface()) {
                 nd = nd.with(Shape.BOX);
@@ -43,11 +44,11 @@ public class SeqClassesTest {
 
     @Test
     public void testClasses() {
-        Seq<Class<?>> ignore = Seq.of(Seq0.class, Object.class);
+        Seq<Class<?>> ignore = Seq.of(BaseSeq.class, Object.class);
         Map<Class<?>, ArraySeq<Class<?>>> map = CLASS_EXPAND
             .filterNot(ignore.toSet()::contains)
             .terminate(cls -> cls.getName().startsWith("java"))
-            .toDAG(Seq.of(ArraySeq.class, LinkedSeq.class, ConcurrentSeq.class, LinkedSeqSet.class, BatchedSeq.class));
+            .toDAG(Seq.of(ArraySeq.class, LinkedSeq.class, ConcurrentSeq.class, LinkedSetSeq.class, BatchedSeq.class));
         Graph graph = graph(map);
         IOChain.apply(String.format("src/test/resources/%s.svg", "seq-classes"),
             s -> Graphviz.fromGraph(graph).render(Format.SVG).toFile(new File(s)));
@@ -55,11 +56,11 @@ public class SeqClassesTest {
 
     @Test
     public void testSeqMap() {
-        Seq<Class<?>> ignore = Seq.of(Seq0.class);
+        Seq<Class<?>> ignore = Seq.of(BaseSeq.class);
         Map<Class<?>, ArraySeq<Class<?>>> map = CLASS_EXPAND
             .filterNot(ignore.toSet()::contains)
             .terminate(cls -> cls.getName().startsWith("java"))
-            .toDAG(Seq.of(LinkedSeqMap.class));
+            .toDAG(Seq.of(LinkedMapSeq.class));
         Graph graph = graph(map);
         IOChain.apply(String.format("src/test/resources/%s.svg", "seq-map"),
             s -> Graphviz.fromGraph(graph).render(Format.SVG).toFile(new File(s)));

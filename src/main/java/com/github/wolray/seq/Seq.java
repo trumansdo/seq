@@ -1,15 +1,49 @@
 package com.github.wolray.seq;
 
-import java.util.*;
+import com.github.wolray.seq.iterators.PickItr;
+import com.github.wolray.seq.pair.BoolPair;
+import com.github.wolray.seq.pair.DoublePair;
+import com.github.wolray.seq.pair.IntPair;
+import com.github.wolray.seq.pair.LongPair;
+import com.github.wolray.seq.pair.Pair;
+import com.github.wolray.seq.pair.PairSeq;
+import com.github.wolray.seq.triple.TripleConsumer;
+import com.github.wolray.seq.triple.TripleSeq;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.LinkedList;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.Queue;
+import java.util.Set;
+import java.util.StringJoiner;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.function.*;
+import java.util.function.BiConsumer;
+import java.util.function.BiFunction;
+import java.util.function.BiPredicate;
+import java.util.function.BinaryOperator;
+import java.util.function.Consumer;
+import java.util.function.Function;
+import java.util.function.IntFunction;
+import java.util.function.Predicate;
+import java.util.function.Supplier;
+import java.util.function.ToDoubleFunction;
+import java.util.function.ToIntFunction;
+import java.util.function.ToLongFunction;
+import java.util.function.UnaryOperator;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
  * @author wolray
  */
-public interface Seq<T> extends Seq0<Consumer<T>> {
+public interface Seq<T> extends BaseSeq<Consumer<T>> {
     @SuppressWarnings("unchecked")
     static <T> Seq<T> empty() {
         return (Seq<T>)Empty.emptySeq;
@@ -97,8 +131,8 @@ public interface Seq<T> extends Seq0<Consumer<T>> {
         return iterable instanceof ItrSeq ? (ItrSeq<T>)iterable : (ItrSeq<T>)iterable::iterator;
     }
 
-    static <K, V> SeqMap<K, V> of(Map<K, V> map) {
-        return SeqMap.of(map);
+    static <K, V> MapSeq<K, V> of(Map<K, V> map) {
+        return MapSeq.of(map);
     }
 
     static <T> Seq<T> of(Optional<T> optional) {
@@ -121,11 +155,11 @@ public interface Seq<T> extends Seq0<Consumer<T>> {
     }
 
     static <N> Seq<N> ofTree(int maxDepth, N node, Function<N, Seq<N>> sub) {
-        return SeqExpand.of(sub).toSeq(node, maxDepth);
+        return ExpandSeq.of(sub).toSeq(node, maxDepth);
     }
 
     static <N> Seq<N> ofTree(N node, Function<N, Seq<N>> sub) {
-        return SeqExpand.of(sub).toSeq(node);
+        return ExpandSeq.of(sub).toSeq(node);
     }
 
     static <T> ItrSeq<T> repeat(int n, T t) {
@@ -502,23 +536,23 @@ public interface Seq<T> extends Seq0<Consumer<T>> {
         return m.get();
     }
 
-    default <K> SeqMap<K, ArraySeq<T>> groupBy(Function<T, K> toKey) {
+    default <K> MapSeq<K, ArraySeq<T>> groupBy(Function<T, K> toKey) {
         return groupBy(toKey, Reducer.toList());
     }
 
-    default <K> SeqMap<K, T> groupBy(Function<T, K> toKey, BinaryOperator<T> operator) {
+    default <K> MapSeq<K, T> groupBy(Function<T, K> toKey, BinaryOperator<T> operator) {
         return groupBy(toKey, Transducer.of(operator));
     }
 
-    default <K, E> SeqMap<K, ArraySeq<E>> groupBy(Function<T, K> toKey, Function<T, E> toValue) {
+    default <K, E> MapSeq<K, ArraySeq<E>> groupBy(Function<T, K> toKey, Function<T, E> toValue) {
         return groupBy(toKey, Reducer.mapping(toValue));
     }
 
-    default <K, V> SeqMap<K, V> groupBy(Function<T, K> toKey, Reducer<T, V> reducer) {
+    default <K, V> MapSeq<K, V> groupBy(Function<T, K> toKey, Reducer<T, V> reducer) {
         return reduce(Reducer.groupBy(toKey, reducer));
     }
 
-    default <K, V, E> SeqMap<K, E> groupBy(Function<T, K> toKey, Transducer<T, V, E> transducer) {
+    default <K, V, E> MapSeq<K, E> groupBy(Function<T, K> toKey, Transducer<T, V, E> transducer) {
         return reduce(Reducer.groupBy(toKey, transducer));
     }
 
@@ -608,7 +642,7 @@ public interface Seq<T> extends Seq0<Consumer<T>> {
         });
     }
 
-    default Seq2<T, T> mapPair(boolean overlapping) {
+    default PairSeq<T, T> mapPair(boolean overlapping) {
         return c -> reduce(new BoolPair<>(false, (T)null), (p, t) -> {
             if (p.flag) {
                 c.accept(p.it, t);
@@ -711,15 +745,15 @@ public interface Seq<T> extends Seq0<Consumer<T>> {
         });
     }
 
-    default <A, B> Seq2<A, B> pair(Function<T, A> f1, Function<T, B> f2) {
+    default <A, B> PairSeq<A, B> pair(Function<T, A> f1, Function<T, B> f2) {
         return c -> consume(t -> c.accept(f1.apply(t), f2.apply(t)));
     }
 
-    default <E> Seq2<E, T> pairBy(Function<T, E> function) {
+    default <E> PairSeq<E, T> pairBy(Function<T, E> function) {
         return c -> consume(t -> c.accept(function.apply(t), t));
     }
 
-    default <E> Seq2<E, T> pairByNotNull(Function<T, E> function) {
+    default <E> PairSeq<E, T> pairByNotNull(Function<T, E> function) {
         return c -> consume(t -> {
             E e = function.apply(t);
             if (e != null) {
@@ -728,11 +762,11 @@ public interface Seq<T> extends Seq0<Consumer<T>> {
         });
     }
 
-    default <E> Seq2<T, E> pairWith(Function<T, E> function) {
+    default <E> PairSeq<T, E> pairWith(Function<T, E> function) {
         return c -> consume(t -> c.accept(t, function.apply(t)));
     }
 
-    default <E> Seq2<T, E> pairWithNotNull(Function<T, E> function) {
+    default <E> PairSeq<T, E> pairWithNotNull(Function<T, E> function) {
         return c -> consume(t -> {
             E e = function.apply(t);
             if (e != null) {
@@ -991,27 +1025,27 @@ public interface Seq<T> extends Seq0<Consumer<T>> {
         return reduce(new ArraySeq<>(sizeOrDefault()), ArraySeq::add);
     }
 
-    default <K, V> SeqMap<K, V> toMap(Function<T, K> toKey, Function<T, V> toValue) {
+    default <K, V> MapSeq<K, V> toMap(Function<T, K> toKey, Function<T, V> toValue) {
         return reduce(Reducer.toMap(() -> new LinkedHashMap<>(sizeOrDefault()), toKey, toValue));
     }
 
-    default <K> SeqMap<K, T> toMapBy(Function<T, K> toKey) {
+    default <K> MapSeq<K, T> toMapBy(Function<T, K> toKey) {
         return toMap(toKey, v -> v);
     }
 
-    default <V> SeqMap<T, V> toMapWith(Function<T, V> toValue) {
+    default <V> MapSeq<T, V> toMapWith(Function<T, V> toValue) {
         return toMap(k -> k, toValue);
     }
 
-    default SeqSet<T> toSet() {
+    default SetSeq<T> toSet() {
         return reduce(Reducer.toSet(sizeOrDefault()));
     }
 
-    default <A, B, D> Seq3<A, B, D> triple(BiConsumer<Consumer3<A, B, D>, T> consumer) {
+    default <A, B, D> TripleSeq<A, B, D> triple(BiConsumer<TripleConsumer<A, B, D>, T> consumer) {
         return c -> consume(t -> consumer.accept(c, t));
     }
 
-    default <A, B, D> Seq3<A, B, D> triple(Function<T, A> f1, Function<T, B> f2, Function<T, D> f3) {
+    default <A, B, D> TripleSeq<A, B, D> triple(Function<T, A> f1, Function<T, B> f2, Function<T, D> f3) {
         return c -> consume(t -> c.accept(f1.apply(t), f2.apply(t), f3.apply(t)));
     }
 
@@ -1073,9 +1107,9 @@ public interface Seq<T> extends Seq0<Consumer<T>> {
         return c -> {
             Supplier<V> supplier = reducer.supplier();
             BiConsumer<V, T> accumulator = reducer.accumulator();
-            Consumer<V> finisher = reducer.finisher();
-            Queue<LongPair<V>> queue = new LinkedList<>();
-            long[] last = {System.currentTimeMillis(), 0};
+            Consumer<V>        finisher = reducer.finisher();
+            Queue<LongPair<V>> queue    = new LinkedList<>();
+            long[]             last     = {System.currentTimeMillis(), 0};
             reduce(last, (a, t) -> {
                 if (a[1] <= 0) {
                     a[1] = stepMillis;
@@ -1149,17 +1183,17 @@ public interface Seq<T> extends Seq0<Consumer<T>> {
         return c -> consumeIndexed((i, t) -> c.accept(new IntPair<>(i, t)));
     }
 
-    default <B, C> Seq3<T, B, C> zip(Iterable<B> bs, Iterable<C> cs) {
+    default <B, C> TripleSeq<T, B, C> zip(Iterable<B> bs, Iterable<C> cs) {
         return c -> zip(bs, cs, c);
     }
 
-    default <B, C> void zip(Iterable<B> bs, Iterable<C> cs, Consumer3<T, B, C> consumer) {
+    default <B, C> void zip(Iterable<B> bs, Iterable<C> cs, TripleConsumer<T, B, C> consumer) {
         Iterator<B> bi = bs.iterator();
         Iterator<C> ci = cs.iterator();
         consumeTillStop(t -> consumer.accept(t, ItrUtil.pop(bi), ItrUtil.pop(ci)));
     }
 
-    default <E> Seq2<T, E> zip(Iterable<E> iterable) {
+    default <E> PairSeq<T, E> zip(Iterable<E> iterable) {
         return c -> zip(iterable, c);
     }
 

@@ -1,5 +1,7 @@
 package com.github.wolray.seq;
 
+import com.github.wolray.seq.iterators.MapItr;
+import com.github.wolray.seq.iterators.PickItr;
 import java.io.InputStream;
 import java.util.*;
 import java.util.function.BiPredicate;

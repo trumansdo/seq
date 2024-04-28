@@ -1,5 +1,6 @@
 package com.github.wolray.seq;
 
+import com.github.wolray.seq.pair.IntPair;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.OptionalInt;
@@ -8,7 +9,7 @@ import java.util.function.*;
 /**
  * @author wolray
  */
-public interface IntSeq extends Seq0<IntConsumer> {
+public interface IntSeq extends BaseSeq<IntConsumer> {
     IntSeq empty = c -> {};
     IntConsumer nothing = t -> {};
 

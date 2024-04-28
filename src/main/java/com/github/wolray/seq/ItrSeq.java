@@ -1,5 +1,7 @@
 package com.github.wolray.seq;
 
+import com.github.wolray.seq.iterators.MapItr;
+import com.github.wolray.seq.iterators.PickItr;
 import java.util.Iterator;
 import java.util.Optional;
 import java.util.function.*;

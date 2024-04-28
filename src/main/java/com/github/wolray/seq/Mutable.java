@@ -8,6 +8,7 @@ import java.util.concurrent.ForkJoinPool;
  */
 public class Mutable<T> implements Lazy<T> {
     protected boolean isSet = false;
+
     protected T it;
 
     public Mutable(T it) {
@@ -54,4 +55,15 @@ public class Mutable<T> implements Lazy<T> {
     public Optional<T> toOptional() {
         return isSet ? Optional.ofNullable(it) : Optional.empty();
     }
+
+    public T getIt() {
+
+        return it;
+    }
+
+    public void setIt(T it) {
+
+        this.it = it;
+    }
+
 }

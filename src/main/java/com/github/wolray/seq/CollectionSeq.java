@@ -6,12 +6,12 @@ import java.util.Iterator;
 /**
  * @author wolray
  */
-public interface SeqCollection<T> extends SizedSeq<T>, Collection<T> {
-    static <T> SeqCollection<T> of(Collection<T> ts) {
-        return ts instanceof SeqCollection ? (SeqCollection<T>)ts : new Proxy<>(ts);
+public interface CollectionSeq<T> extends SizedSeq<T>, Collection<T> {
+    static <T> CollectionSeq<T> of(Collection<T> ts) {
+        return ts instanceof CollectionSeq ? (CollectionSeq<T>)ts : new Proxy<>(ts);
     }
 
-    class Proxy<T, C extends Collection<T>> implements SeqCollection<T> {
+    class Proxy<T, C extends Collection<T>> implements CollectionSeq<T> {
         public final C backer;
 
         public Proxy(C backer) {

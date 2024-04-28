@@ -7,12 +7,12 @@ import java.util.ListIterator;
 /**
  * @author wolray
  */
-public interface SeqList<T> extends SizedSeq<T>, List<T> {
-    static <T> SeqList<T> of(List<T> list) {
-        return list instanceof SeqList ? (SeqList<T>)list : new Proxy<>(list);
+public interface ListSeq<T> extends SizedSeq<T>, List<T> {
+    static <T> ListSeq<T> of(List<T> list) {
+        return list instanceof ListSeq ? (ListSeq<T>)list : new Proxy<>(list);
     }
 
-    class Proxy<T> extends SeqCollection.Proxy<T, List<T>> implements SeqList<T> {
+    class Proxy<T> extends CollectionSeq.Proxy<T, List<T>> implements ListSeq<T> {
         public Proxy(List<T> backer) {
             super(backer);
         }

@@ -1,5 +1,6 @@
-package com.github.wolray.seq;
+package com.github.wolray.seq.iterators;
 
+import com.github.wolray.seq.Seq;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 

@@ -1,15 +1,39 @@
 package com.github.wolray.seq;
 
+import com.github.wolray.seq.pair.DoublePair;
+import com.github.wolray.seq.pair.IntPair;
+import com.github.wolray.seq.pair.LongPair;
+import com.github.wolray.seq.pair.Pair;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.*;
+import java.util.stream.Collector;
 
 /**
+ * 对标{@link Collector}接口
  * @author wolray
  */
 public interface Reducer<T, V> {
+
+    /**
+     * 等价{@link Collector#supplier()}
+     *
+     * @see Collector#supplier()
+     */
     Supplier<V> supplier();
+
+    /**
+     * 等价{@link Collector#accumulator()} ()}
+     *
+     * @see Collector#supplier()
+     */
     BiConsumer<V, T> accumulator();
+
+    /**
+     * 等价{@link Collector#finisher()} ()}
+     *
+     * @see Collector#finisher() ()
+     */
     Consumer<V> finisher();
 
     static <T> Transducer<T, ?, Double> average(ToDoubleFunction<T> function) {
@@ -71,16 +95,17 @@ public interface Reducer<T, V> {
         return Transducer.of(filtering(predicate, transducer.reducer()), transducer.transformer());
     }
 
-    static <T, K, V> Reducer<T, SeqMap<K, V>> groupBy(Function<T, K> toKey, Reducer<T, V> reducer) {
+    static <T, K, V> Reducer<T, MapSeq<K, V>> groupBy(Function<T, K> toKey, Reducer<T, V> reducer) {
         Supplier<V> supplier = reducer.supplier();
         BiConsumer<V, T> accumulator = reducer.accumulator();
         Consumer<V> finisher = reducer.finisher();
-        return of(SeqMap::hash, (m, t) ->
+        return of(
+            MapSeq::hash, (m, t) ->
                 accumulator.accept(m.computeIfAbsent(toKey.apply(t), k -> supplier.get()), t),
             finisher == null ? null : m -> m.justValues().consume(finisher));
     }
 
-    static <T, K, V, E> Transducer<T, ?, SeqMap<K, E>> groupBy(Function<T, K> toKey, Transducer<T, V, E> transducer) {
+    static <T, K, V, E> Transducer<T, ?, MapSeq<K, E>> groupBy(Function<T, K> toKey, Transducer<T, V, E> transducer) {
         return Transducer.of(groupBy(toKey, transducer.reducer()), m -> m.replaceValue(transducer.transformer()));
     }
 
@@ -319,36 +344,36 @@ public interface Reducer<T, V> {
         return of(() -> new ArraySeq<>(initialCapacity), ArraySeq::add);
     }
 
-    static <T, K, V> Reducer<T, SeqMap<K, V>> toMap(Function<T, K> toKey, Function<T, V> toValue) {
-        return of(SeqMap::hash, (m, t) -> m.put(toKey.apply(t), toValue.apply(t)));
+    static <T, K, V> Reducer<T, MapSeq<K, V>> toMap(Function<T, K> toKey, Function<T, V> toValue) {
+        return of(MapSeq::hash, (m, t) -> m.put(toKey.apply(t), toValue.apply(t)));
     }
 
-    static <T, K, V> Reducer<T, SeqMap<K, V>> toMap(Supplier<Map<K, V>> mapSupplier, Function<T, K> toKey, Function<T, V> toValue) {
-        return of(() -> SeqMap.of(mapSupplier.get()), (m, t) -> m.put(toKey.apply(t), toValue.apply(t)));
+    static <T, K, V> Reducer<T, MapSeq<K, V>> toMap(Supplier<Map<K, V>> mapSupplier, Function<T, K> toKey, Function<T, V> toValue) {
+        return of(() -> MapSeq.of(mapSupplier.get()), (m, t) -> m.put(toKey.apply(t), toValue.apply(t)));
     }
 
-    static <T, K> Reducer<T, SeqMap<K, T>> toMapBy(Function<T, K> toKey) {
+    static <T, K> Reducer<T, MapSeq<K, T>> toMapBy(Function<T, K> toKey) {
         return toMapBy(LinkedHashMap::new, toKey);
     }
 
-    static <T, K> Reducer<T, SeqMap<K, T>> toMapBy(Supplier<Map<K, T>> mapSupplier, Function<T, K> toKey) {
-        return of(() -> SeqMap.of(mapSupplier.get()), (m, t) -> m.put(toKey.apply(t), t));
+    static <T, K> Reducer<T, MapSeq<K, T>> toMapBy(Supplier<Map<K, T>> mapSupplier, Function<T, K> toKey) {
+        return of(() -> MapSeq.of(mapSupplier.get()), (m, t) -> m.put(toKey.apply(t), t));
     }
 
-    static <T, V> Reducer<T, SeqMap<T, V>> toMapWith(Function<T, V> toValue) {
+    static <T, V> Reducer<T, MapSeq<T, V>> toMapWith(Function<T, V> toValue) {
         return toMapWith(LinkedHashMap::new, toValue);
     }
 
-    static <T, V> Reducer<T, SeqMap<T, V>> toMapWith(Supplier<Map<T, V>> mapSupplier, Function<T, V> toValue) {
-        return of(() -> SeqMap.of(mapSupplier.get()), (m, t) -> m.put(t, toValue.apply(t)));
+    static <T, V> Reducer<T, MapSeq<T, V>> toMapWith(Supplier<Map<T, V>> mapSupplier, Function<T, V> toValue) {
+        return of(() -> MapSeq.of(mapSupplier.get()), (m, t) -> m.put(t, toValue.apply(t)));
     }
 
-    static <T> Reducer<T, SeqSet<T>> toSet() {
-        return of(LinkedSeqSet::new, Set::add);
+    static <T> Reducer<T, SetSeq<T>> toSet() {
+        return of(LinkedSetSeq::new, Set::add);
     }
 
-    static <T> Reducer<T, SeqSet<T>> toSet(int initialCapacity) {
-        return of(() -> new LinkedSeqSet<>(initialCapacity), Set::add);
+    static <T> Reducer<T, SetSeq<T>> toSet(int initialCapacity) {
+        return of(() -> new LinkedSetSeq<>(initialCapacity), Set::add);
     }
 
     default Reducer<T, V> then(Consumer<V> action) {

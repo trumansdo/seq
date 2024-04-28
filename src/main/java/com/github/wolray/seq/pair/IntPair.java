@@ -1,4 +1,4 @@
-package com.github.wolray.seq;
+package com.github.wolray.seq.pair;
 
 /**
  * @author wolray

@@ -7,7 +7,7 @@ import java.util.function.Consumer;
 /**
  * @author wolray
  */
-public class ArraySeq<T> extends ArrayList<T> implements SeqList<T> {
+public class ArraySeq<T> extends ArrayList<T> implements ListSeq<T> {
     public ArraySeq(int initialCapacity) {
         super(initialCapacity);
     }

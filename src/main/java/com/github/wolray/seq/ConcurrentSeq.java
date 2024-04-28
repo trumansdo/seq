@@ -6,7 +6,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 /**
  * @author wolray
  */
-public class ConcurrentSeq<T> extends ConcurrentLinkedQueue<T> implements SeqQueue<T> {
+public class ConcurrentSeq<T> extends ConcurrentLinkedQueue<T> implements QueueSeq<T> {
     public ConcurrentSeq() {}
 
     public ConcurrentSeq(Collection<? extends T> c) {

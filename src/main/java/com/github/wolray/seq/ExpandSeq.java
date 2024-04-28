@@ -10,16 +10,16 @@ import java.util.function.Predicate;
 /**
  * @author wolray
  */
-public interface SeqExpand<T> extends Function<T, Seq<T>> {
-    static <T> SeqExpand<T> of(Function<T, Seq<T>> function) {
-        return function instanceof SeqExpand ? (SeqExpand<T>)function : function::apply;
+public interface ExpandSeq<T> extends Function<T, Seq<T>> {
+    static <T> ExpandSeq<T> of(Function<T, Seq<T>> function) {
+        return function instanceof ExpandSeq ? (ExpandSeq<T>)function : function::apply;
     }
 
-    default SeqExpand<T> filter(Predicate<T> predicate) {
+    default ExpandSeq<T> filter(Predicate<T> predicate) {
         return t -> apply(t).filter(predicate);
     }
 
-    default SeqExpand<T> filterNot(Predicate<T> predicate) {
+    default ExpandSeq<T> filterNot(Predicate<T> predicate) {
         return t -> apply(t).filter(predicate.negate());
     }
 
@@ -49,13 +49,13 @@ public interface SeqExpand<T> extends Function<T, Seq<T>> {
         }
     }
 
-    default SeqExpand<T> terminate(Predicate<T> predicate) {
+    default ExpandSeq<T> terminate(Predicate<T> predicate) {
         return t -> predicate.test(t) ? Seq.empty() : apply(t);
     }
 
     default Map<T, ArraySeq<T>> toDAG(Seq<T> nodes) {
-        Map<T, ArraySeq<T>> map = new HashMap<>();
-        SeqExpand<T> expand = terminate(t -> !map.containsKey(t));
+        Map<T, ArraySeq<T>> map    = new HashMap<>();
+        ExpandSeq<T>        expand = terminate(t -> !map.containsKey(t));
         nodes.consume(t -> expand.scan(map::put, t));
         return map;
     }
