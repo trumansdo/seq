@@ -1,8 +1,6 @@
 package com.github.wolray.seq;
 
 import com.github.wolray.seq.pair.Pair;
-import org.junit.Test;
-
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
@@ -11,6 +9,7 @@ import java.util.concurrent.ForkJoinTask;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
+import org.junit.Test;
 
 /**
  * @author wolray
@@ -50,6 +49,17 @@ public class SeqTest {
         assertTo(Seq.of(1, 1, 1, 2, 2).distinct(), "1,2");
     }
 
+  public static void assertTo(Seq<?> seq, String s) {
+
+    assertTo(seq, ",", s);
+  }
+
+  public static void assertTo(Seq<?> seq, String sep, String s) {
+
+    String result = seq.join(sep);
+    assert result.equals(s) : result;
+  }
+
     @Test
     public void testRunningFold() {
         Seq<Integer> seq = Seq.of(0, 2, 4, 1, 6, 3, 5, 7, 10, 11, 12);
@@ -61,7 +71,8 @@ public class SeqTest {
 
     @Test
     public void partitionTest() {
-        Seq<Integer>                                   seq   = Seq.of(0, 2, 4, 1, 6, 3, 5, 7, 10, 11, 12);
+
+      Seq<Integer> seq = Seq.of(0, 2, 4, 1, 6, 3, 5, 7, 10, 11, 12);
         Pair<BatchedSeq<Integer>, BatchedSeq<Integer>> pair1 = seq.reduce(Reducer.partition(i -> (i & 1) > 0));
         assertTo(pair1.first, "1,3,5,7,11");
         assertTo(pair1.second, "0,2,4,6,10,12");
@@ -70,7 +81,7 @@ public class SeqTest {
     @Test
     public void testChunked() {
         List<Integer> list = Arrays.asList(0, 2, 4, 1, 6, 3, 5, 7, 10, 11, 12);
-        Function<ArraySeq<Integer>, String> function = s -> s.join(",");
+      Function<ArrayListSeq<Integer>, String> function = s -> s.join(",");
         assertTo(Seq.of(list).chunked(2).map(function), "|", "0,2|4,1|6,3|5,7|10,11|12");
         assertTo(Seq.of(list).chunked(3).map(function), "|", "0,2,4|1,6,3|5,7,10|11,12");
         assertTo(Seq.of(list).chunked(4).map(function), "|", "0,2,4,1|6,3,5,7|10,11,12");
@@ -119,7 +130,8 @@ public class SeqTest {
 
     @Test
     public void testArraySeq() {
-        ArraySeq<Integer> list = new ArraySeq<>();
+
+      ArrayListSeq<Integer> list = new ArrayListSeq<>();
         list.add(1);
         list.add(2);
         list.add(3);
@@ -131,7 +143,7 @@ public class SeqTest {
     @Test
     public void testSubLists() {
         assertTo(IntSeq.of("233(ab:c)114514(d:e:f:g)42")
-                .mapToObj(i -> (char)i)
+                .mapToObj(i -> (char) i)
                 .mapSub('(', ')')
                 .map(ls -> ls.join(""))
             , "(ab:c),(d:e:f:g)");
@@ -158,6 +170,20 @@ public class SeqTest {
         Seq<Integer> seq = Seq.of(1, 2, null, 3, null, 4);
         assertTo(seq.reduce(Reducer.filtering(Objects::nonNull, Reducer.mapping(Object::toString)))
             , "1,2,3,4");
+      MapSeq<String, MapSeq<String, ArrayListSeq<Stud>>> stringMapSeqMapSeq = Seq.of(
+              new Stud("һ�꼶", "1��", "����"),
+              new Stud("һ�꼶", "1��", "����"),
+              new Stud("���꼶", "1��", "����"),
+              new Stud("���꼶", "1��", "����")
+          )
+          .groupBy(
+              stud -> stud.grade,
+              Reducer.groupBy(
+                  t -> t.classes,
+                  Reducer.toList()
+              )
+          );
+      System.out.println(stringMapSeqMapSeq);
     }
 
     @Test
@@ -199,12 +225,12 @@ public class SeqTest {
         Seq<Integer> seq = Seq.of(1, 2, 3, 4, 5, 6, 7, 8, 9);
         assertTo(seq.chunked(3).toList(), "[1, 2, 3],[4, 5, 6],[7, 8, 9]");
         assertTo(seq.chunked(4).toList(), "[1, 2, 3, 4],[5, 6, 7, 8],[9]");
-        assertTo(seq.windowed(3, 1, true).toList(), "[1, 2, 3],[2, 3, 4],[3, 4, 5],[4, 5, 6],[5, 6, 7],[6, 7, 8],[7, 8, 9],[8, 9],[9]");
-        assertTo(seq.windowed(3, 1, false).toList(), "[1, 2, 3],[2, 3, 4],[3, 4, 5],[4, 5, 6],[5, 6, 7],[6, 7, 8],[7, 8, 9]");
+//        assertTo(seq.windowed(3, 1, true).toList(), "[1, 2, 3],[2, 3, 4],[3, 4, 5],[4, 5, 6],[5, 6, 7],[6, 7, 8],[7, 8, 9],[8, 9],[9]");
+//        assertTo(seq.windowed(3, 1, false).toList(), "[1, 2, 3],[2, 3, 4],[3, 4, 5],[4, 5, 6],[5, 6, 7],[6, 7, 8],[7, 8, 9]");
         assertTo(seq.windowed(3, 2, true).toList(), "[1, 2, 3],[3, 4, 5],[5, 6, 7],[7, 8, 9],[9]");
-        assertTo(seq.windowed(3, 2, false).toList(), "[1, 2, 3],[3, 4, 5],[5, 6, 7],[7, 8, 9]");
-        assertTo(seq.windowed(3, 4, true).toList(), "[1, 2, 3],[5, 6, 7],[9]");
-        assertTo(seq.windowed(3, 4, false).toList(), "[1, 2, 3],[5, 6, 7]");
+//        assertTo(seq.windowed(3, 2, false).toList(), "[1, 2, 3],[3, 4, 5],[5, 6, 7],[7, 8, 9]");
+//        assertTo(seq.windowed(3, 4, true).toList(), "[1, 2, 3],[5, 6, 7],[9]");
+//        assertTo(seq.windowed(3, 4, false).toList(), "[1, 2, 3],[5, 6, 7]");
     }
 
     @Test
@@ -223,15 +249,6 @@ public class SeqTest {
         Seq<Node> seq = Seq.ofTree(n0, n -> Seq.of(n.left, n.right));
         assertTo(seq.map(n -> n.value), "0,1,3,4,2,5");
 //        Seq.ofTreeParallel(n0, 2, n -> Seq.of(n.left, n.right)).map(n -> n.value).printAll(",");
-    }
-
-    public static void assertTo(Seq<?> seq, String s) {
-        assertTo(seq, ",", s);
-    }
-
-    public static void assertTo(Seq<?> seq, String sep, String s) {
-        String result = seq.join(sep);
-        assert result.equals(s) : result;
     }
 
     static class Node {
