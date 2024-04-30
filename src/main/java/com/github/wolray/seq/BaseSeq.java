@@ -3,7 +3,9 @@ package com.github.wolray.seq;
 /**
  * 所有流的Base接口
  *
- * @param <C> 消费回调函数
+ * @param <C>
+ *     消费回调函数
+ *
  * @author wolray
  */
 public interface BaseSeq<C> {

@@ -140,10 +140,7 @@ public interface PairSeq<K, V> extends BaseSeq<BiConsumer<K, V>> {
   /**
    * 折叠，如{@link com.github.wolray.seq.ItrSeq#fold(Object, BiFunction)}
    *
-   * @param init
-   * @param function
    * @return {@link E }
-   * @author s-zengc
    */
   default <E> E fold(E init, TripleFunction<E, K, V, E> function) {
 
@@ -156,7 +153,6 @@ public interface PairSeq<K, V> extends BaseSeq<BiConsumer<K, V>> {
    * 返回key的流
    *
    * @return {@link Seq }<{@link K }>
-   * @author s-zengc
    */
   default Seq<K> justKeys() {
 
@@ -167,7 +163,6 @@ public interface PairSeq<K, V> extends BaseSeq<BiConsumer<K, V>> {
    * 返回value的流
    *
    * @return {@link Seq }<{@link V }>
-   * @author s-zengc
    */
   default Seq<V> justValues() {
 
@@ -245,7 +240,6 @@ public interface PairSeq<K, V> extends BaseSeq<BiConsumer<K, V>> {
    * 交换key和value
    *
    * @return {@link PairSeq }<{@link V }, {@link K }>
-   * @author s-zengc
    */
   default PairSeq<V, K> swap() {
 

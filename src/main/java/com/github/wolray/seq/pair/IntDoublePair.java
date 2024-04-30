@@ -1,7 +1,7 @@
 package com.github.wolray.seq.pair;
 
 /**
- * ��{@link Integer}Ϊleft��{@link Double}Ϊright��Pair
+ * 以{@link Integer}为left，{@link Double}为right的Pair
  *
  * @author wolray
  */
@@ -14,11 +14,12 @@ public class IntDoublePair extends Pair<Integer, Double> {
   public IntDoublePair(int first, double second) {
 
     super(first, second);
-    }
+  }
 
-    @Override
-    public String toString() {
+  @Override
+  public String toString() {
 
-      return String.format("(%d,%f)", first, second);
-    }
+    return String.format("(%d,%f)", first, second);
+  }
+
 }

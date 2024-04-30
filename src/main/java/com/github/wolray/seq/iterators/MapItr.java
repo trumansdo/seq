@@ -8,21 +8,25 @@ import java.util.Iterator;
  * @author wolray
  */
 public abstract class MapItr<T, E> implements Iterator<E> {
-    private final Iterator<T> iterator;
 
-    public MapItr(Iterator<T> iterator) {
-        this.iterator = iterator;
-    }
+  private final Iterator<T> iterator;
 
-    @Override
-    public boolean hasNext() {
-        return iterator.hasNext();
-    }
+  public MapItr(Iterator<T> iterator) {
 
-    @Override
-    public E next() {
-        return apply(iterator.next());
-    }
+    this.iterator = iterator;
+  }
+
+  @Override
+  public boolean hasNext() {
+
+    return iterator.hasNext();
+  }
+
+  @Override
+  public E next() {
+
+    return apply(iterator.next());
+  }
 
   /**
    * 在迭代过程中对每个数据进行转换操作
@@ -30,4 +34,5 @@ public abstract class MapItr<T, E> implements Iterator<E> {
    * @return {@link E }
    */
   public abstract E apply(T t);
+
 }

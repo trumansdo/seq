@@ -12,7 +12,7 @@ import java.util.function.BiFunction;
 import java.util.function.Function;
 
 /**
- * Map���ϵ���
+ * Map集合的流
  *
  * @author wolray
  */
@@ -34,7 +34,7 @@ public interface MapSeq<K, V> extends PairSeq<K, V>, Map<K, V> {
   }
 
   /**
-   * �ڲ�����ת��{@link TreeMap}
+   * 内部容器转成{@link TreeMap}
    *
    * @return {@link MapSeq }<{@link K }, {@link V }>
    */
@@ -45,51 +45,59 @@ public interface MapSeq<K, V> extends PairSeq<K, V>, Map<K, V> {
 
   SetSeq<K> keysSeq();
 
-    CollectionSeq<V> valuesSeq();
+  CollectionSeq<V> valuesSeq();
 
-    @Override
-    default void consume(BiConsumer<K, V> consumer) {
-        forEach(consumer);
-    }
+  @Override
+  default void consume(BiConsumer<K, V> consumer) {
 
-    default <E> MapSeq<E, V> mapByKey(BiFunction<K, V, E> function) {
-        return toMap(newForMapping(), function, (k, v) -> v);
-    }
+    forEach(consumer);
+  }
+
+  default <E> MapSeq<E, V> mapByKey(BiFunction<K, V, E> function) {
+
+    return toMap(newForMapping(), function, (k, v) -> v);
+  }
 
   /**
-   * ��mapת������ʱӦ�����´�������
+   * 做map转换操作时应该重新创建容器
    *
    * @return {@link MapSeq }<{@link A }, {@link B }>
    */
   <A, B> MapSeq<A, B> newForMapping();
 
   default <E> MapSeq<E, V> mapByKey(Function<K, E> function) {
-        return toMap(newForMapping(), (k, v) -> function.apply(k), (k, v) -> v);
-    }
 
-    default <E> MapSeq<K, E> mapByValue(BiFunction<K, V, E> function) {
-        return toMap(newForMapping(), (k, v) -> k, function);
-    }
+    return toMap(newForMapping(), (k, v) -> function.apply(k), (k, v) -> v);
+  }
 
-    default <E> MapSeq<K, E> mapByValue(Function<V, E> function) {
-        return toMap(newForMapping(), (k, v) -> k, (k, v) -> function.apply(v));
-    }
+  default <E> MapSeq<K, E> mapByValue(BiFunction<K, V, E> function) {
 
-    @Override
-    default MapSeq<K, V> toMap() {
-        return this;
-    }
+    return toMap(newForMapping(), (k, v) -> k, function);
+  }
 
-    default boolean isNotEmpty() {
-        return !isEmpty();
-    }
+  default <E> MapSeq<K, E> mapByValue(Function<V, E> function) {
 
-    @SuppressWarnings("unchecked")
-    default <E> MapSeq<K, E> replaceValue(BiFunction<K, V, E> function) {
-        MapSeq<K, Object> map = (MapSeq<K, Object>) this;
-      map.entrySet().forEach(e -> e.setValue(function.apply(e.getKey(), (V) e.getValue())));
-      return (MapSeq<K, E>) map;
-    }
+    return toMap(newForMapping(), (k, v) -> k, (k, v) -> function.apply(v));
+  }
+
+  @Override
+  default MapSeq<K, V> toMap() {
+
+    return this;
+  }
+
+  default boolean isNotEmpty() {
+
+    return !isEmpty();
+  }
+
+  @SuppressWarnings("unchecked")
+  default <E> MapSeq<K, E> replaceValue(BiFunction<K, V, E> function) {
+
+    MapSeq<K, Object> map = (MapSeq<K, Object>) this;
+    map.entrySet().forEach(e -> e.setValue(function.apply(e.getKey(), (V) e.getValue())));
+    return (MapSeq<K, E>) map;
+  }
 
   @SuppressWarnings("unchecked")
   default <E> MapSeq<K, E> replaceValue(Function<V, E> function) {
@@ -137,35 +145,38 @@ public interface MapSeq<K, V> extends PairSeq<K, V>, Map<K, V> {
 
 
     Proxy(Map<K, V> backer) {
-            this.backer = backer;
-        }
 
-        @Override
-        public SetSeq<K> keysSeq() {
+      this.backer = backer;
+    }
 
-          return SetSeq.of(backer.keySet());
-        }
+    @Override
+    public SetSeq<K> keysSeq() {
 
-        @Override
-        public CollectionSeq<V> valuesSeq() {
-            return CollectionSeq.of(backer.values());
-        }
+      return SetSeq.of(backer.keySet());
+    }
 
-        @Override
-        public SetSeq<Entry<K, V>> entrySeq() {
+    @Override
+    public CollectionSeq<V> valuesSeq() {
 
-          return SetSeq.of(backer.entrySet());
-        }
+      return CollectionSeq.of(backer.values());
+    }
+
+    @Override
+    public SetSeq<Entry<K, V>> entrySeq() {
+
+      return SetSeq.of(backer.entrySet());
+    }
 
     @Override
     public <A, B> MapSeq<A, B> newForMapping() {
-            if (backer instanceof TreeMap) {
-                return new Proxy<>(new TreeMap<>());
-            }
-            if (backer instanceof ConcurrentHashMap) {
-                return new Proxy<>(new ConcurrentHashMap<>(backer.size()));
-            }
-            return new LinkedHashMapSeq<>(backer.size());
+
+      if (backer instanceof TreeMap) {
+        return new Proxy<>(new TreeMap<>());
+      }
+      if (backer instanceof ConcurrentHashMap) {
+        return new Proxy<>(new ConcurrentHashMap<>(backer.size()));
+      }
+      return new LinkedHashMapSeq<>(backer.size());
     }
 
     @Override
@@ -178,53 +189,61 @@ public interface MapSeq<K, V> extends PairSeq<K, V>, Map<K, V> {
     public int size() {
 
       return backer.size();
-        }
+    }
 
-        @Override
-        public boolean isEmpty() {
-            return backer.isEmpty();
-        }
+    @Override
+    public boolean isEmpty() {
 
-        @Override
-        public boolean containsKey(Object key) {
-            return backer.containsKey(key);
-        }
+      return backer.isEmpty();
+    }
 
-        @Override
-        public boolean containsValue(Object value) {
-            return backer.containsValue(value);
-        }
+    @Override
+    public boolean containsKey(Object key) {
 
-        @Override
-        public V get(Object key) {
-            return backer.get(key);
-        }
+      return backer.containsKey(key);
+    }
 
-        @Override
-        public V put(K key, V value) {
-            return backer.put(key, value);
-        }
+    @Override
+    public boolean containsValue(Object value) {
 
-        @Override
-        public V remove(Object key) {
-            return backer.remove(key);
-        }
+      return backer.containsValue(value);
+    }
 
-        @Override
-        public void putAll(Map<? extends K, ? extends V> m) {
-            backer.putAll(m);
-        }
+    @Override
+    public V get(Object key) {
 
-        @Override
-        public void clear() {
-            backer.clear();
-        }
+      return backer.get(key);
+    }
 
-        @Override
-        public Set<K> keySet() {
+    @Override
+    public V put(K key, V value) {
 
-          return backer.keySet();
-        }
+      return backer.put(key, value);
+    }
+
+    @Override
+    public V remove(Object key) {
+
+      return backer.remove(key);
+    }
+
+    @Override
+    public void putAll(Map<? extends K, ? extends V> m) {
+
+      backer.putAll(m);
+    }
+
+    @Override
+    public void clear() {
+
+      backer.clear();
+    }
+
+    @Override
+    public Set<K> keySet() {
+
+      return backer.keySet();
+    }
 
     @Override
     public Collection<V> values() {

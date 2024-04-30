@@ -7,7 +7,7 @@ import java.util.LinkedList;
 import java.util.function.Consumer;
 
 /**
- * ��һ����ά���鰴�д������
+ * 对一个二维数组按行处理的流
  *
  * @author wolray
  */
@@ -16,41 +16,48 @@ public class BatchedSeq<T> implements SizedSeq<T> {
   private transient final LinkedList<ArrayList<T>> list = new LinkedList<>();
 
   /**
-   * �����е������������300
+   * 控制行的数量，最大是300
    */
-    private transient int batchSize = 10;
-    private transient int size;
-    private transient ArrayList<T> cur;
+  private transient int batchSize = 10;
 
-    @Override
-    public void consume(Consumer<T> consumer) {
-        list.forEach(ls -> ls.forEach(consumer));
-    }
+  private transient int size;
 
-    @Override
-    public Iterator<T> iterator() {
-        return new Iterator<T>() {
+  private transient ArrayList<T> cur;
 
-          final Iterator<ArrayList<T>> iterator = list.iterator();
-            Iterator<T> cur = Collections.emptyIterator();
+  @Override
+  public void consume(Consumer<T> consumer) {
 
-            @Override
-            public boolean hasNext() {
-                if (!cur.hasNext()) {
-                    if (!iterator.hasNext()) {
-                        return false;
-                    }
-                    cur = iterator.next().iterator();
-                }
-                return true;
-            }
+    list.forEach(ls -> ls.forEach(consumer));
+  }
 
-            @Override
-            public T next() {
-                return cur.next();
-            }
-        };
-    }
+  @Override
+  public Iterator<T> iterator() {
+
+    return new Iterator<T>() {
+
+      final Iterator<ArrayList<T>> iterator = list.iterator();
+
+      Iterator<T> cur = Collections.emptyIterator();
+
+      @Override
+      public boolean hasNext() {
+
+        if (!cur.hasNext()) {
+          if (!iterator.hasNext()) {
+            return false;
+          }
+          cur = iterator.next().iterator();
+        }
+        return true;
+      }
+
+      @Override
+      public T next() {
+
+        return cur.next();
+      }
+    };
+  }
 
   @Override
   public boolean isEmpty() {
@@ -59,29 +66,33 @@ public class BatchedSeq<T> implements SizedSeq<T> {
   }
 
   @Override
-    public int size() {
-        return size;
-    }
+  public int size() {
+
+    return size;
+  }
 
   /**
-   * �Զ�ά���ݽ����������
+   * 对二维数据进行逐行添加
    */
   public void add(T t) {
-        if (cur == null) {
-            cur = new ArrayList<>(batchSize);
-            list.add(cur);
-        }
-        cur.add(t);
-        size++;
-        if (cur.size() == batchSize) {
-            cur = null;
-          //�����е������������300��ÿ��������������
-          batchSize = Math.min(300, Math.max(batchSize, size >> 1));
-        }
-    }
 
-    @Override
-    public String toString() {
-        return toList().toString();
+    if (cur == null) {
+      cur = new ArrayList<>(batchSize);
+      list.add(cur);
     }
+    cur.add(t);
+    size++;
+    if (cur.size() == batchSize) {
+      cur = null;
+      //控制行的数量，最大是300。每行容量翻倍扩容
+      batchSize = Math.min(300, Math.max(batchSize, size >> 1));
+    }
+  }
+
+  @Override
+  public String toString() {
+
+    return toList().toString();
+  }
+
 }

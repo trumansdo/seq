@@ -11,70 +11,79 @@ import java.util.function.Predicate;
  * @author wolray
  */
 public interface ExpandSeq<T> extends Function<T, Seq<T>> {
-    static <T> ExpandSeq<T> of(Function<T, Seq<T>> function) {
 
-      return function instanceof ExpandSeq ? (ExpandSeq<T>) function : function::apply;
-    }
+  static <T> ExpandSeq<T> of(Function<T, Seq<T>> function) {
 
-    default ExpandSeq<T> filter(Predicate<T> predicate) {
-        return t -> apply(t).filter(predicate);
-    }
+    return function instanceof ExpandSeq ? (ExpandSeq<T>) function : function::apply;
+  }
 
-    default ExpandSeq<T> filterNot(Predicate<T> predicate) {
-        return t -> apply(t).filter(predicate.negate());
-    }
+  default ExpandSeq<T> filter(Predicate<T> predicate) {
+
+    return t -> apply(t).filter(predicate);
+  }
+
+  default ExpandSeq<T> filterNot(Predicate<T> predicate) {
+
+    return t -> apply(t).filter(predicate.negate());
+  }
 
   default void scan(BiConsumer<T, ArrayListSeq<T>> c, T node) {
 
     ArrayListSeq<T> sub = apply(node).filterNotNull().toList();
-        c.accept(node, sub);
-        sub.consume(n -> scan(c, n));
-    }
+    c.accept(node, sub);
+    sub.consume(n -> scan(c, n));
+  }
 
-    default void scan(Consumer<T> c, T node) {
-        c.accept(node);
-        apply(node).consume(n -> {
-            if (n != null) {
-                scan(c, n);
-            }
-        });
-    }
+  default void scan(Consumer<T> c, T node) {
 
-    default void scan(Consumer<T> c, T node, int maxDepth, int depth) {
-        c.accept(node);
-        if (depth < maxDepth) {
-            apply(node).consume(n -> {
-                if (n != null) {
-                    scan(c, n, maxDepth, depth + 1);
-                }
-            });
+    c.accept(node);
+    apply(node).consume(n -> {
+      if (n != null) {
+        scan(c, n);
+      }
+    });
+  }
+
+  default void scan(Consumer<T> c, T node, int maxDepth, int depth) {
+
+    c.accept(node);
+    if (depth < maxDepth) {
+      apply(node).consume(n -> {
+        if (n != null) {
+          scan(c, n, maxDepth, depth + 1);
         }
+      });
     }
+  }
 
-    default ExpandSeq<T> terminate(Predicate<T> predicate) {
-        return t -> predicate.test(t) ? Seq.empty() : apply(t);
-    }
+  default ExpandSeq<T> terminate(Predicate<T> predicate) {
+
+    return t -> predicate.test(t) ? Seq.empty() : apply(t);
+  }
 
   default Map<T, ArrayListSeq<T>> toDAG(Seq<T> nodes) {
 
     Map<T, ArrayListSeq<T>> map    = new HashMap<>();
     ExpandSeq<T>            expand = terminate(t -> !map.containsKey(t));
-        nodes.consume(t -> expand.scan(map::put, t));
-        return map;
-    }
+    nodes.consume(t -> expand.scan(map::put, t));
+    return map;
+  }
 
   default Map<T, ArrayListSeq<T>> toDAG(T node) {
 
     Map<T, ArrayListSeq<T>> map = new HashMap<>();
-        terminate(t -> !map.containsKey(t)).scan(map::put, node);
-        return map;
-    }
+    terminate(t -> !map.containsKey(t)).scan(map::put, node);
+    return map;
+  }
 
-    default Seq<T> toSeq(T node) {
-        return c -> scan(c, node);
-    }
+  default Seq<T> toSeq(T node) {
 
-    default Seq<T> toSeq(T node, int maxDepth) {
-        return c -> scan(c, node, maxDepth, 0);
-    }
+    return c -> scan(c, node);
+  }
+
+  default Seq<T> toSeq(T node, int maxDepth) {
+
+    return c -> scan(c, node, maxDepth, 0);
+  }
+
 }

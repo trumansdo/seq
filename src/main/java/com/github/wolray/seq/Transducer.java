@@ -13,28 +13,28 @@ import java.util.stream.Collector;
  */
 public interface Transducer<T, V, E> {
 
-    static <T, V, E> Transducer<T, V, E> of(Collector<T, V, E> collector) {
+  static <T, V, E> Transducer<T, V, E> of(Collector<T, V, E> collector) {
 
-        return of(Reducer.of(collector.supplier(), collector.accumulator()), collector.finisher());
-    }
+    return of(Reducer.of(collector.supplier(), collector.accumulator()), collector.finisher());
+  }
 
-    static <T, V, E> Transducer<T, V, E> of(Reducer<T, V> reducer, Function<V, E> transformer) {
+  static <T, V, E> Transducer<T, V, E> of(Reducer<T, V> reducer, Function<V, E> transformer) {
 
-      return new Transducer<T, V, E>() {
+    return new Transducer<T, V, E>() {
 
-        @Override
-            public Reducer<T, V> reducer() {
+      @Override
+      public Reducer<T, V> reducer() {
 
-          return reducer;
-            }
+        return reducer;
+      }
 
-            @Override
-            public Function<V, E> transformer() {
+      @Override
+      public Function<V, E> transformer() {
 
-              return transformer;
-            }
-        };
-    }
+        return transformer;
+      }
+    };
+  }
 
   /**
    * 不变换类型的reduce操作，比如数值的计算
@@ -55,7 +55,7 @@ public interface Transducer<T, V, E> {
   ) {
 
     return of(Reducer.of(supplier, accumulator), transformer);
-    }
+  }
 
   /**
    * map/reduce理论中的reduce收束/归约/归纳器
