@@ -11,7 +11,7 @@ import java.util.function.Consumer;
  *
  * @author wolray
  */
-public class BatchedSeq<T> implements SizedSeq<T> {
+public class BatchedZeroFlow<T> implements SizedZeroFlow<T> {
 
   private transient final LinkedList<ArrayList<T>> list = new LinkedList<>();
 

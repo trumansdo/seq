@@ -9,18 +9,18 @@ import java.util.function.Consumer;
  *
  * @author wolray
  */
-public class ArrayListSeq<T> extends ArrayList<T> implements ListSeq<T> {
+public class ArrayListZeroFlow<T> extends ArrayList<T> implements ListZeroFlow<T> {
 
-  public ArrayListSeq(int initialCapacity) {
+  public ArrayListZeroFlow(int initialCapacity) {
 
     super(initialCapacity);
   }
 
-  public ArrayListSeq() {
+  public ArrayListZeroFlow() {
 
   }
 
-  public ArrayListSeq(Collection<? extends T> c) {
+  public ArrayListZeroFlow(Collection<? extends T> c) {
 
     super(c);
   }
@@ -32,16 +32,16 @@ public class ArrayListSeq<T> extends ArrayList<T> implements ListSeq<T> {
     set(j, t);
   }
 
-  public Seq<ArrayListSeq<T>> permute(boolean inplace) {
+  public ZeroFlow<ArrayListZeroFlow<T>> permute(boolean inplace) {
 
     return c -> permute(c, inplace, 0);
   }
 
-  private void permute(Consumer<ArrayListSeq<T>> c, boolean inplace, int i) {
+  private void permute(Consumer<ArrayListZeroFlow<T>> c, boolean inplace, int i) {
     // 感觉是给快速排序用的
     int n = size();
     if (i == n) {
-      c.accept(inplace ? this : new ArrayListSeq<>(this));
+      c.accept(inplace ? this : new ArrayListZeroFlow<>(this));
       return;
     }
     for (int j = i; j < n; j++) {

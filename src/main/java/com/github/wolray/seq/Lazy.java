@@ -18,7 +18,7 @@ import java.util.function.UnaryOperator;
  */
 public interface Lazy<T> extends Supplier<T> {
 
-  static <T> Lazy<T> of(Seq<T> seq) {
+  static <T> Lazy<T> of(ZeroFlow<T> seq) {
 
     return seq.lazyLast();
   }
@@ -96,7 +96,7 @@ public interface Lazy<T> extends Supplier<T> {
   }
 
   static <A, B, C, D, T> Lazy<T> of(
-      Supplier<A> s1, Supplier<B> s2, Supplier<C> s3, Supplier<D> s4, Function4<A, B, C, D, T> function
+      Supplier<A> s1, Supplier<B> s2, Supplier<C> s3, Supplier<D> s4, FourFunction<A, B, C, D, T> function
   ) {
 
     return new Mutable<T>(null) {
@@ -121,7 +121,7 @@ public interface Lazy<T> extends Supplier<T> {
 
   static <A, B, C, D, E, T> Lazy<T> of(
       Supplier<A> s1, Supplier<B> s2, Supplier<C> s3, Supplier<D> s4, Supplier<E> s5,
-      Function5<A, B, C, D, E, T> function
+      FiveFunction<A, B, C, D, E, T> function
   ) {
 
     return new Mutable<T>(null) {
@@ -147,7 +147,7 @@ public interface Lazy<T> extends Supplier<T> {
 
   static <A, B, C, D, E, F, T> Lazy<T> of(
       Supplier<A> s1, Supplier<B> s2, Supplier<C> s3, Supplier<D> s4, Supplier<E> s5, Supplier<F> s6,
-      Function6<A, B, C, D, E, F, T> function
+      SixFunction<A, B, C, D, E, F, T> function
   ) {
 
     return new Mutable<T>(null) {

@@ -6,7 +6,7 @@ import java.util.function.Consumer;
 /**
  * @author wolray
  */
-public class HotChannel<T> extends ConcurrentLinkedQueue<T> implements Seq<T>, Async.EasyLock {
+public class HotChannel<T> extends ConcurrentLinkedQueue<T> implements ZeroFlow<T>, Async.EasyLock {
 
   public boolean stop;
 

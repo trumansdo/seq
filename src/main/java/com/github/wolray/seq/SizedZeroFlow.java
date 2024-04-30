@@ -11,7 +11,7 @@ import java.util.function.Function;
  * @version 1.0.0
  * @since 1.0.0
  */
-public interface SizedSeq<T> extends ItrSeq<T> {
+public interface SizedZeroFlow<T> extends ItrZeroFlow<T> {
 
   @Override
   default int sizeOrDefault() {
@@ -28,7 +28,7 @@ public interface SizedSeq<T> extends ItrSeq<T> {
   boolean isEmpty();
 
   /**
-   * 当n超出容器最大下标用另一个替换处理，小于最大下标时的逻辑: {@link Seq#consume(Consumer, int, Consumer)}
+   * 当n超出容器最大下标用另一个替换处理，小于最大下标时的逻辑: {@link ZeroFlow#consume(Consumer, int, Consumer)}
    */
   @Override
   default void consume(Consumer<T> consumer, int n, Consumer<T> substitute) {
@@ -36,14 +36,14 @@ public interface SizedSeq<T> extends ItrSeq<T> {
     if (n >= size()) {
       consume(substitute);
     } else {
-      ItrSeq.super.consume(consumer, n, substitute);
+      ItrZeroFlow.super.consume(consumer, n, substitute);
     }
   }
 
   int size();
 
   @Override
-  default SizedSeq<T> cache() {
+  default SizedZeroFlow<T> cache() {
 
     return this;
   }
@@ -56,39 +56,39 @@ public interface SizedSeq<T> extends ItrSeq<T> {
   /**
    * 删除前面多少个数据
    *
-   * @return {@link ItrSeq }<{@link T }>
+   * @return {@link ItrZeroFlow }<{@link T }>
    */
   @Override
-  default ItrSeq<T> drop(int n) {
+  default ItrZeroFlow<T> drop(int n) {
 
-    return n >= size() ? Collections::emptyIterator : ItrSeq.super.drop(n);
+    return n >= size() ? Collections::emptyIterator : ItrZeroFlow.super.drop(n);
   }
 
   @Override
-  default <E> SizedSeq<E> map(Function<T, E> function) {
+  default <E> SizedZeroFlow<E> map(Function<T, E> function) {
 
-    return new SizedSeq<E>() {
+    return new SizedZeroFlow<E>() {
 
       @Override
       public Iterator<E> iterator() {
 
-        return ItrUtil.map(SizedSeq.this.iterator(), function);
+        return ItrUtil.map(SizedZeroFlow.this.iterator(), function);
       }
 
       @Override
       public int size() {
 
-        return SizedSeq.this.size();
+        return SizedZeroFlow.this.size();
       }
 
       @Override
       public boolean isEmpty() {
 
-        return SizedSeq.this.isEmpty();
+        return SizedZeroFlow.this.isEmpty();
       }
 
       @Override
-      public SizedSeq<E> cache() {
+      public SizedZeroFlow<E> cache() {
 
         return toList();
       }
@@ -96,25 +96,25 @@ public interface SizedSeq<T> extends ItrSeq<T> {
   }
 
   /**
-   * @return {@link ItrSeq }<{@link E }>
+   * @return {@link ItrZeroFlow }<{@link E }>
    *
-   * @see ItrSeq#map(Function, int, Function)
+   * @see ItrZeroFlow#map(Function, int, Function)
    */
   @Override
-  default <E> ItrSeq<E> map(Function<T, E> function, int n, Function<T, E> substitute) {
+  default <E> ItrZeroFlow<E> map(Function<T, E> function, int n, Function<T, E> substitute) {
 
     if (n >= size()) {
       return map(substitute);
     } else {
-      return ItrSeq.super.map(function, n, substitute);
+      return ItrZeroFlow.super.map(function, n, substitute);
     }
   }
 
 
   @Override
-  default ItrSeq<T> take(int n) {
+  default ItrZeroFlow<T> take(int n) {
 
-    return n >= size() ? this : ItrSeq.super.take(n);
+    return n >= size() ? this : ItrZeroFlow.super.take(n);
   }
 
 

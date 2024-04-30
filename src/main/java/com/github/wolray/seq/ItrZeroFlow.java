@@ -15,7 +15,7 @@ import java.util.function.Predicate;
  *
  * @author wolray
  */
-public interface ItrSeq<T> extends Iterable<T>, Seq<T> {
+public interface ItrZeroFlow<T> extends Iterable<T>, ZeroFlow<T> {
 
   /**
    * 消费就是循环
@@ -41,13 +41,13 @@ public interface ItrSeq<T> extends Iterable<T>, Seq<T> {
    * 将自己作为迭代对象
    */
   @Override
-  default ItrSeq<T> asIterable() {
+  default ItrZeroFlow<T> asIterable() {
 
     return this;
   }
 
   @Override
-  default <E> ItrSeq<E> map(Function<T, E> function) {
+  default <E> ItrZeroFlow<E> map(Function<T, E> function) {
 
     return () -> ItrUtil.map(iterator(), function);
   }
@@ -56,7 +56,7 @@ public interface ItrSeq<T> extends Iterable<T>, Seq<T> {
    * 删除前面n个
    */
   @Override
-  default ItrSeq<T> drop(int n) {
+  default ItrZeroFlow<T> drop(int n) {
 
     return () -> ItrUtil.drop(iterator(), n);
   }
@@ -65,7 +65,7 @@ public interface ItrSeq<T> extends Iterable<T>, Seq<T> {
    * 按条件删除
    */
   @Override
-  default ItrSeq<T> dropWhile(Predicate<T> predicate) {
+  default ItrZeroFlow<T> dropWhile(Predicate<T> predicate) {
 
     return () -> ItrUtil.dropWhile(iterator(), predicate);
   }
@@ -74,7 +74,7 @@ public interface ItrSeq<T> extends Iterable<T>, Seq<T> {
    * 过滤
    */
   @Override
-  default ItrSeq<T> filter(Predicate<T> predicate) {
+  default ItrZeroFlow<T> filter(Predicate<T> predicate) {
 
     return predicate == null ? this : () -> ItrUtil.filter(iterator(), predicate);
   }
@@ -82,10 +82,10 @@ public interface ItrSeq<T> extends Iterable<T>, Seq<T> {
   /**
    * 按数据的类型过滤
    *
-   * @return {@link ItrSeq }<{@link E }>
+   * @return {@link ItrZeroFlow }<{@link E }>
    */
   @Override
-  default <E> ItrSeq<E> filterInstance(Class<E> cls) {
+  default <E> ItrZeroFlow<E> filterInstance(Class<E> cls) {
 
     return () -> new PickItr<E>() {
 
@@ -100,7 +100,7 @@ public interface ItrSeq<T> extends Iterable<T>, Seq<T> {
             return cls.cast(t);
           }
         }
-        return Seq.stop();
+        return ZeroFlow.stop();
       }
     };
   }
@@ -122,16 +122,16 @@ public interface ItrSeq<T> extends Iterable<T>, Seq<T> {
   /**
    * 展开二维可迭代对象
    *
-   * @return {@link ItrSeq }<{@link E }>
+   * @return {@link ItrZeroFlow }<{@link E }>
    */
   @Override
-  default <E> ItrSeq<E> flatIterable(Function<T, Iterable<E>> function) {
+  default <E> ItrZeroFlow<E> flatIterable(Function<T, Iterable<E>> function) {
 
     return () -> ItrUtil.flat(iterator(), function);
   }
 
   @Override
-  default <E> ItrSeq<E> flatOptional(Function<T, Optional<E>> function) {
+  default <E> ItrZeroFlow<E> flatOptional(Function<T, Optional<E>> function) {
 
     return () -> ItrUtil.flatOptional(ItrUtil.map(iterator(), function));
   }
@@ -150,7 +150,7 @@ public interface ItrSeq<T> extends Iterable<T>, Seq<T> {
    * @see ItrUtil#map(Iterator, Function, int, Function)
    */
   @Override
-  default <E> ItrSeq<E> map(Function<T, E> function, int n, Function<T, E> substitute) {
+  default <E> ItrZeroFlow<E> map(Function<T, E> function, int n, Function<T, E> substitute) {
 
     return n <= 0 ? map(function) : () -> ItrUtil.map(iterator(), function, n, substitute);
   }
@@ -159,7 +159,7 @@ public interface ItrSeq<T> extends Iterable<T>, Seq<T> {
    * @see ItrUtil#mapIndexed(Iterator, IndexObjFunction)
    */
   @Override
-  default <E> ItrSeq<E> mapIndexed(IndexObjFunction<T, E> function) {
+  default <E> ItrZeroFlow<E> mapIndexed(IndexObjFunction<T, E> function) {
 
     return () -> ItrUtil.mapIndexed(iterator(), function);
   }
@@ -167,10 +167,10 @@ public interface ItrSeq<T> extends Iterable<T>, Seq<T> {
   /**
    * null的不处理
    *
-   * @return {@link ItrSeq }<{@link E }>
+   * @return {@link ItrZeroFlow }<{@link E }>
    */
   @Override
-  default <E> ItrSeq<E> mapMaybe(Function<T, E> function) {
+  default <E> ItrZeroFlow<E> mapMaybe(Function<T, E> function) {
 
     return () -> new PickItr<E>() {
 
@@ -185,7 +185,7 @@ public interface ItrSeq<T> extends Iterable<T>, Seq<T> {
             return function.apply(t);
           }
         }
-        return Seq.stop();
+        return ZeroFlow.stop();
       }
     };
   }
@@ -193,10 +193,10 @@ public interface ItrSeq<T> extends Iterable<T>, Seq<T> {
   /**
    * 转换后的数据为空则直接跳过
    *
-   * @return {@link ItrSeq }<{@link E }>
+   * @return {@link ItrZeroFlow }<{@link E }>
    */
   @Override
-  default <E> ItrSeq<E> mapNotNull(Function<T, E> function) {
+  default <E> ItrZeroFlow<E> mapNotNull(Function<T, E> function) {
 
     return () -> new PickItr<E>() {
 
@@ -211,7 +211,7 @@ public interface ItrSeq<T> extends Iterable<T>, Seq<T> {
             return e;
           }
         }
-        return Seq.stop();
+        return ZeroFlow.stop();
       }
     };
   }
@@ -234,10 +234,10 @@ public interface ItrSeq<T> extends Iterable<T>, Seq<T> {
   /**
    * 类似Peek只消费不处理也不终止
    *
-   * @return {@link ItrSeq }<{@link T }>
+   * @return {@link ItrZeroFlow }<{@link T }>
    */
   @Override
-  default ItrSeq<T> onEach(Consumer<T> consumer) {
+  default ItrZeroFlow<T> onEach(Consumer<T> consumer) {
 
     return map(t -> {
       consumer.accept(t);
@@ -246,7 +246,7 @@ public interface ItrSeq<T> extends Iterable<T>, Seq<T> {
   }
 
   @Override
-  default ItrSeq<T> onEach(int n, Consumer<T> consumer) {
+  default ItrZeroFlow<T> onEach(int n, Consumer<T> consumer) {
 
     return map(t -> t, n, t -> {
       consumer.accept(t);
@@ -257,10 +257,10 @@ public interface ItrSeq<T> extends Iterable<T>, Seq<T> {
   /**
    * 在处理中折叠，就像是海浪一样，每个浪波是之前浪波的延续。 <br/> 但不同于方法{@link #fold(Object, BiFunction)}是关注最后一个浪波的结果，而它关注每个浪波的形成过程
    *
-   * @return {@link ItrSeq }<{@link E }>
+   * @return {@link ItrZeroFlow }<{@link E }>
    */
   @Override
-  default <E> ItrSeq<E> runningFold(E init, BiFunction<E, T, E> function) {
+  default <E> ItrZeroFlow<E> runningFold(E init, BiFunction<E, T, E> function) {
 
     return () -> new MapItr<T, E>(iterator()) {
 
@@ -278,13 +278,13 @@ public interface ItrSeq<T> extends Iterable<T>, Seq<T> {
    * @see ItrUtil#take(Iterator, int)
    */
   @Override
-  default ItrSeq<T> take(int n) {
+  default ItrZeroFlow<T> take(int n) {
 
     return () -> ItrUtil.take(iterator(), n);
   }
 
   @Override
-  default <E> ItrSeq<T> takeWhile(Function<T, E> function, BiPredicate<E, E> testPrevCurr) {
+  default <E> ItrZeroFlow<T> takeWhile(Function<T, E> function, BiPredicate<E, E> testPrevCurr) {
 
     return () -> ItrUtil.takeWhile(iterator(), function, testPrevCurr);
   }
@@ -293,7 +293,7 @@ public interface ItrSeq<T> extends Iterable<T>, Seq<T> {
    * @see ItrUtil#takeWhile(Iterator, Predicate)
    */
   @Override
-  default ItrSeq<T> takeWhile(Predicate<T> predicate) {
+  default ItrZeroFlow<T> takeWhile(Predicate<T> predicate) {
 
     return () -> ItrUtil.takeWhile(iterator(), predicate);
   }
@@ -304,9 +304,9 @@ public interface ItrSeq<T> extends Iterable<T>, Seq<T> {
    * @param t
    *     每个数据之间的插入数据
    *
-   * @return {@link ItrSeq }<{@link T }>
+   * @return {@link ItrZeroFlow }<{@link T }>
    */
-  default ItrSeq<T> zip(T t) {
+  default ItrZeroFlow<T> zip(T t) {
 
     return () -> ItrUtil.zip(iterator(), t);
   }

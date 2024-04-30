@@ -8,7 +8,7 @@ package com.github.wolray.seq;
  *
  * @author wolray
  */
-public interface BaseSeq<C> {
+public interface BaseZeroFlow<C> {
 
   /**
    * 可中断的

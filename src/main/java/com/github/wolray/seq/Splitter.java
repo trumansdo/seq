@@ -65,14 +65,14 @@ public interface Splitter {
 
   static Splitter ofEmpty() {
 
-    return (s, limit) -> Seq.unit(s);
+    return (s, limit) -> ZeroFlow.unit(s);
   }
 
-  default Seq<String> split(String s) {
+  default ZeroFlow<String> split(String s) {
 
     return split(s, Integer.MAX_VALUE);
   }
 
-  Seq<String> split(String s, int limit);
+  ZeroFlow<String> split(String s, int limit);
 
 }

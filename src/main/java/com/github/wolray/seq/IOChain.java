@@ -101,7 +101,7 @@ public interface IOChain<T> {
     };
   }
 
-  default <E> Seq<E> toSeq(Function<T, E> provider) {
+  default <E> ZeroFlow<E> toSeq(Function<T, E> provider) {
 
     return c -> use(t -> {
       E e;
@@ -127,7 +127,7 @@ public interface IOChain<T> {
     }
   }
 
-  default <E> Seq<E> toSeq(Function<T, E> provider, int n, UnaryOperator<E> replace) {
+  default <E> ZeroFlow<E> toSeq(Function<T, E> provider, int n, UnaryOperator<E> replace) {
 
     return c -> use(t -> {
       E e;
@@ -144,7 +144,7 @@ public interface IOChain<T> {
     });
   }
 
-  default <E> Seq<E> toSeq(Function<T, E> provider, int skip) {
+  default <E> ZeroFlow<E> toSeq(Function<T, E> provider, int skip) {
 
     return c -> use(t -> {
       E e;
@@ -160,7 +160,7 @@ public interface IOChain<T> {
     });
   }
 
-  default <E> Seq<E> toSeq(long limit, Function<T, E> provider) {
+  default <E> ZeroFlow<E> toSeq(long limit, Function<T, E> provider) {
 
     return c -> use(t -> {
       for (long i = 0; i < limit; i++) {

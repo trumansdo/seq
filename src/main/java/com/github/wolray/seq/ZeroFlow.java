@@ -6,9 +6,9 @@ import com.github.wolray.seq.pair.DoublePair;
 import com.github.wolray.seq.pair.IntPair;
 import com.github.wolray.seq.pair.LongPair;
 import com.github.wolray.seq.pair.Pair;
-import com.github.wolray.seq.pair.PairSeq;
+import com.github.wolray.seq.pair.PairZeroFlow;
 import com.github.wolray.seq.triple.TripleConsumer;
-import com.github.wolray.seq.triple.TripleSeq;
+import com.github.wolray.seq.triple.TripleZeroFlow;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -43,16 +43,16 @@ import java.util.regex.Pattern;
 /**
  * @author wolray
  */
-public interface Seq<T> extends BaseSeq<Consumer<T>> {
+public interface ZeroFlow<T> extends BaseZeroFlow<Consumer<T>> {
 
   //---------------------------核心方法----------------------------
 
-  static <T> Seq<T> unit(T t) {
+  static <T> ZeroFlow<T> unit(T t) {
 
     return c -> c.accept(t);
   }
 
-  static <T> ItrSeq<T> gen(Supplier<T> supplier) {
+  static <T> ItrZeroFlow<T> gen(Supplier<T> supplier) {
 
     return () -> new Iterator<T>() {
 
@@ -70,7 +70,7 @@ public interface Seq<T> extends BaseSeq<Consumer<T>> {
     };
   }
 
-  static <T> Seq<T> gen(T seed, UnaryOperator<T> operator) {
+  static <T> ZeroFlow<T> gen(T seed, UnaryOperator<T> operator) {
 
     return c -> {
       T t = seed;
@@ -81,7 +81,7 @@ public interface Seq<T> extends BaseSeq<Consumer<T>> {
     };
   }
 
-  static <T> Seq<T> gen(T seed1, T seed2, BinaryOperator<T> operator) {
+  static <T> ZeroFlow<T> gen(T seed1, T seed2, BinaryOperator<T> operator) {
 
     return c -> {
       T t1 = seed1, t2 = seed2;
@@ -93,30 +93,30 @@ public interface Seq<T> extends BaseSeq<Consumer<T>> {
     };
   }
 
-  static <K, V> MapSeq<K, V> of(Map<K, V> map) {
+  static <K, V> MapZeroFlow<K, V> of(Map<K, V> map) {
 
-    return MapSeq.of(map);
+    return MapZeroFlow.of(map);
   }
 
-  static <T> Seq<T> of(Optional<T> optional) {
+  static <T> ZeroFlow<T> of(Optional<T> optional) {
 
     return optional::ifPresent;
   }
 
   @SafeVarargs
-  static <T> Seq<T> of(T... ts) {
+  static <T> ZeroFlow<T> of(T... ts) {
 
     return of(Arrays.asList(ts));
   }
 
-  static <T> Seq<T> of(Iterable<T> iterable) {
+  static <T> ZeroFlow<T> of(Iterable<T> iterable) {
 
-    return iterable instanceof ItrSeq ? (ItrSeq<T>) iterable : (ItrSeq<T>) iterable::iterator;
+    return iterable instanceof ItrZeroFlow ? (ItrZeroFlow<T>) iterable : (ItrZeroFlow<T>) iterable::iterator;
   }
 
-  static Seq<Object> ofJson(Object node) {
+  static ZeroFlow<Object> ofJson(Object node) {
 
-    return Seq.ofTree(node, n -> c -> {
+    return ZeroFlow.ofTree(node, n -> c -> {
       if (n instanceof Iterable) {
         ((Iterable<?>) n).forEach(c);
       } else if (n instanceof Map) {
@@ -125,17 +125,17 @@ public interface Seq<T> extends BaseSeq<Consumer<T>> {
     });
   }
 
-  static <N> Seq<N> ofTree(N node, Function<N, Seq<N>> sub) {
+  static <N> ZeroFlow<N> ofTree(N node, Function<N, ZeroFlow<N>> sub) {
 
     return ExpandSeq.of(sub).toSeq(node);
   }
 
-  static <N> Seq<N> ofTree(int maxDepth, N node, Function<N, Seq<N>> sub) {
+  static <N> ZeroFlow<N> ofTree(int maxDepth, N node, Function<N, ZeroFlow<N>> sub) {
 
     return ExpandSeq.of(sub).toSeq(node, maxDepth);
   }
 
-  static <T> ItrSeq<T> repeat(int n, T t) {
+  static <T> ItrZeroFlow<T> repeat(int n, T t) {
 
     return () -> new Iterator<T>() {
 
@@ -156,18 +156,18 @@ public interface Seq<T> extends BaseSeq<Consumer<T>> {
     };
   }
 
-  static <T> ItrSeq<T> flatIterable(Iterable<Optional<T>> iterable) {
+  static <T> ItrZeroFlow<T> flatIterable(Iterable<Optional<T>> iterable) {
 
     return () -> ItrUtil.flatOptional(iterable.iterator());
   }
 
   @SafeVarargs
-  static <T> ItrSeq<T> flatIterable(Iterable<T>... iterables) {
+  static <T> ItrZeroFlow<T> flatIterable(Iterable<T>... iterables) {
 
     return () -> ItrUtil.flat(Arrays.asList(iterables).iterator());
   }
 
-  static <T> ItrSeq<T> tillNull(Supplier<T> supplier) {
+  static <T> ItrZeroFlow<T> tillNull(Supplier<T> supplier) {
 
     return () -> new PickItr<T>() {
 
@@ -175,7 +175,7 @@ public interface Seq<T> extends BaseSeq<Consumer<T>> {
       public T pick() {
 
         T t = supplier.get();
-        return t != null ? t : Seq.stop();
+        return t != null ? t : ZeroFlow.stop();
       }
     };
   }
@@ -185,22 +185,22 @@ public interface Seq<T> extends BaseSeq<Consumer<T>> {
     throw StopException.INSTANCE;
   }
 
-  static <T> Seq<T> flat(Seq<Optional<T>> seq) {
+  static <T> ZeroFlow<T> flat(ZeroFlow<Optional<T>> seq) {
 
     return c -> seq.consume(o -> o.ifPresent(c));
   }
 
   @SafeVarargs
-  static <T> Seq<T> flat(Seq<T>... seq) {
+  static <T> ZeroFlow<T> flat(ZeroFlow<T>... seq) {
 
     return c -> {
-      for (Seq<T> s : seq) {
+      for (ZeroFlow<T> s : seq) {
         s.consume(c);
       }
     };
   }
 
-  static ItrSeq<Matcher> match(String s, Pattern pattern) {
+  static ItrZeroFlow<Matcher> match(String s, Pattern pattern) {
 
     return () -> new Iterator<Matcher>() {
 
@@ -228,9 +228,9 @@ public interface Seq<T> extends BaseSeq<Consumer<T>> {
 
   //--------------------------stream的快速构造操作-----------------------------
   @SuppressWarnings("unchecked")
-  static <T> Seq<T> empty() {
+  static <T> ZeroFlow<T> empty() {
 
-    return (Seq<T>) Empty.emptySeq;
+    return (ZeroFlow<T>) Empty.emptySeq;
   }
 
   /**
@@ -285,7 +285,7 @@ public interface Seq<T> extends BaseSeq<Consumer<T>> {
     return find(predicate).isPresent();
   }
 
-  default Seq<T> append(T t) {
+  default ZeroFlow<T> append(T t) {
 
     return c -> {
       consume(c);
@@ -294,7 +294,7 @@ public interface Seq<T> extends BaseSeq<Consumer<T>> {
   }
 
   @SuppressWarnings("unchecked")
-  default Seq<T> append(T... t) {
+  default ZeroFlow<T> append(T... t) {
 
     return c -> {
       consume(c);
@@ -304,7 +304,7 @@ public interface Seq<T> extends BaseSeq<Consumer<T>> {
     };
   }
 
-  default Seq<T> appendAll(Iterable<T> iterable) {
+  default ZeroFlow<T> appendAll(Iterable<T> iterable) {
 
     return c -> {
       consume(c);
@@ -312,7 +312,7 @@ public interface Seq<T> extends BaseSeq<Consumer<T>> {
     };
   }
 
-  default Seq<T> appendWith(Seq<T> seq) {
+  default ZeroFlow<T> appendWith(ZeroFlow<T> seq) {
 
     return c -> {
       consume(c);
@@ -320,14 +320,14 @@ public interface Seq<T> extends BaseSeq<Consumer<T>> {
     };
   }
 
-  default ItrSeq<T> asIterable() {
+  default ItrZeroFlow<T> asIterable() {
 
     return toBatched();
   }
 
-  default BatchedSeq<T> toBatched() {
+  default BatchedZeroFlow<T> toBatched() {
 
-    return reduce(new BatchedSeq<>(), BatchedSeq::add);
+    return reduce(new BatchedZeroFlow<>(), BatchedZeroFlow::add);
   }
 
   /**
@@ -367,12 +367,12 @@ public interface Seq<T> extends BaseSeq<Consumer<T>> {
     return transducer.transformer().apply(reduce(transducer.reducer()));
   }
 
-  default Seq<ArrayListSeq<T>> chunked(int size) {
+  default ZeroFlow<ArrayListZeroFlow<T>> chunked(int size) {
 
     return chunked(size, Reducer.toList(size));
   }
 
-  default <V> Seq<V> chunked(int size, Reducer<T, V> reducer) {
+  default <V> ZeroFlow<V> chunked(int size, Reducer<T, V> reducer) {
 
     if (size <= 0) {
       throw new IllegalArgumentException("non-positive size");
@@ -400,7 +400,7 @@ public interface Seq<T> extends BaseSeq<Consumer<T>> {
     };
   }
 
-  default <V, E> Seq<E> chunked(int size, Transducer<T, V, E> transducer) {
+  default <V, E> ZeroFlow<E> chunked(int size, Transducer<T, V, E> transducer) {
 
     return chunked(size, transducer.reducer()).map(transducer.transformer());
   }
@@ -408,12 +408,12 @@ public interface Seq<T> extends BaseSeq<Consumer<T>> {
   /**
    * map/reduce理论中的核心map方法
    */
-  default <E> Seq<E> map(Function<T, E> function) {
+  default <E> ZeroFlow<E> map(Function<T, E> function) {
 
     return c -> consume(t -> c.accept(function.apply(t)));
   }
 
-  default Seq<T> circle() {
+  default ZeroFlow<T> circle() {
 
     return c -> {
       while (true) {
@@ -453,7 +453,7 @@ public interface Seq<T> extends BaseSeq<Consumer<T>> {
     return reduce(Reducer.countNot(predicate));
   }
 
-  default Seq<T> distinct() {
+  default ZeroFlow<T> distinct() {
 
     return c -> reduce(new HashSet<>(), (set, t) -> {
       if (set.add(t)) {
@@ -462,7 +462,7 @@ public interface Seq<T> extends BaseSeq<Consumer<T>> {
     });
   }
 
-  default <E> Seq<T> distinctBy(Function<T, E> function) {
+  default <E> ZeroFlow<T> distinctBy(Function<T, E> function) {
 
     return c -> reduce(new HashSet<>(), (set, t) -> {
       if (set.add(function.apply(t))) {
@@ -471,12 +471,12 @@ public interface Seq<T> extends BaseSeq<Consumer<T>> {
     });
   }
 
-  default Seq<T> drop(int n) {
+  default ZeroFlow<T> drop(int n) {
 
     return n <= 0 ? this : partial(n, nothing());
   }
 
-  default Seq<T> partial(int n, Consumer<T> substitute) {
+  default ZeroFlow<T> partial(int n, Consumer<T> substitute) {
 
     return c -> consume(c, n, substitute);
   }
@@ -511,7 +511,7 @@ public interface Seq<T> extends BaseSeq<Consumer<T>> {
     }
   }
 
-  default Seq<T> dropWhile(Predicate<T> predicate) {
+  default ZeroFlow<T> dropWhile(Predicate<T> predicate) {
 
     return c -> foldBoolean(false, (b, t) -> {
       if (b || !predicate.test(t)) {
@@ -529,7 +529,7 @@ public interface Seq<T> extends BaseSeq<Consumer<T>> {
     return a[0];
   }
 
-  default Seq<T> duplicateAll(int times) {
+  default ZeroFlow<T> duplicateAll(int times) {
 
     return c -> {
       for (int i = 0; i < times; i++) {
@@ -538,7 +538,7 @@ public interface Seq<T> extends BaseSeq<Consumer<T>> {
     };
   }
 
-  default Seq<T> duplicateEach(int times) {
+  default ZeroFlow<T> duplicateEach(int times) {
 
     return c -> consume(t -> {
       for (int i = 0; i < times; i++) {
@@ -547,7 +547,7 @@ public interface Seq<T> extends BaseSeq<Consumer<T>> {
     });
   }
 
-  default Seq<T> duplicateIf(int times, Predicate<T> predicate) {
+  default ZeroFlow<T> duplicateIf(int times, Predicate<T> predicate) {
 
     return c -> consume(t -> {
       if (predicate.test(t)) {
@@ -560,7 +560,7 @@ public interface Seq<T> extends BaseSeq<Consumer<T>> {
     });
   }
 
-  default Seq<T> filter(int n, Predicate<T> predicate) {
+  default ZeroFlow<T> filter(int n, Predicate<T> predicate) {
 
     return predicate == null ? this : c -> consume(c, n, t -> {
       if (predicate.test(t)) {
@@ -569,12 +569,12 @@ public interface Seq<T> extends BaseSeq<Consumer<T>> {
     });
   }
 
-  default Seq<T> filterIn(Collection<T> collection) {
+  default ZeroFlow<T> filterIn(Collection<T> collection) {
 
     return collection == null ? this : filter(collection::contains);
   }
 
-  default Seq<T> filter(Predicate<T> predicate) {
+  default ZeroFlow<T> filter(Predicate<T> predicate) {
 
     return predicate == null ? this : c -> consume(t -> {
       if (predicate.test(t)) {
@@ -583,12 +583,12 @@ public interface Seq<T> extends BaseSeq<Consumer<T>> {
     });
   }
 
-  default Seq<T> filterIn(Map<T, ?> map) {
+  default ZeroFlow<T> filterIn(Map<T, ?> map) {
 
     return map == null ? this : filter(map::containsKey);
   }
 
-  default Seq<T> filterIndexed(IndexObjPredicate<T> predicate) {
+  default ZeroFlow<T> filterIndexed(IndexObjPredicate<T> predicate) {
 
     return predicate == null ? this : c -> consumeIndexed((i, t) -> {
       if (predicate.test(i, t)) {
@@ -603,7 +603,7 @@ public interface Seq<T> extends BaseSeq<Consumer<T>> {
     consume(t -> consumer.accept(a[0]++, t));
   }
 
-  default <E> Seq<E> filterInstance(Class<E> cls) {
+  default <E> ZeroFlow<E> filterInstance(Class<E> cls) {
 
     return c -> consume(t -> {
       if (cls.isInstance(t)) {
@@ -612,22 +612,22 @@ public interface Seq<T> extends BaseSeq<Consumer<T>> {
     });
   }
 
-  default Seq<T> filterNotIn(Collection<T> collection) {
+  default ZeroFlow<T> filterNotIn(Collection<T> collection) {
 
     return collection == null ? this : filterNot(collection::contains);
   }
 
-  default Seq<T> filterNot(Predicate<T> predicate) {
+  default ZeroFlow<T> filterNot(Predicate<T> predicate) {
 
     return predicate == null ? this : filter(predicate.negate());
   }
 
-  default Seq<T> filterNotIn(Map<T, ?> map) {
+  default ZeroFlow<T> filterNotIn(Map<T, ?> map) {
 
     return map == null ? this : filterNot(map::containsKey);
   }
 
-  default Seq<T> filterNotNull() {
+  default ZeroFlow<T> filterNotNull() {
 
     return filter(Objects::nonNull);
   }
@@ -658,17 +658,17 @@ public interface Seq<T> extends BaseSeq<Consumer<T>> {
     return find(t -> true);
   }
 
-  default <E> Seq<E> flatIterable(Function<T, Iterable<E>> function) {
+  default <E> ZeroFlow<E> flatIterable(Function<T, Iterable<E>> function) {
 
     return c -> consume(t -> function.apply(t).forEach(c));
   }
 
-  default <E> Seq<E> flatMap(Function<T, Seq<E>> function) {
+  default <E> ZeroFlow<E> flatMap(Function<T, ZeroFlow<E>> function) {
 
     return c -> consume(t -> function.apply(t).consume(c));
   }
 
-  default <E> Seq<E> flatOptional(Function<T, Optional<E>> function) {
+  default <E> ZeroFlow<E> flatOptional(Function<T, Optional<E>> function) {
 
     return c -> consume(t -> function.apply(t).ifPresent(c));
   }
@@ -694,27 +694,27 @@ public interface Seq<T> extends BaseSeq<Consumer<T>> {
     return m.get();
   }
 
-  default <K> MapSeq<K, ArrayListSeq<T>> groupBy(Function<T, K> toKey) {
+  default <K> MapZeroFlow<K, ArrayListZeroFlow<T>> groupBy(Function<T, K> toKey) {
 
     return groupBy(toKey, Reducer.toList());
   }
 
-  default <K, V> MapSeq<K, V> groupBy(Function<T, K> toKey, Reducer<T, V> reducer) {
+  default <K, V> MapZeroFlow<K, V> groupBy(Function<T, K> toKey, Reducer<T, V> reducer) {
 
     return reduce(Reducer.groupBy(toKey, reducer));
   }
 
-  default <K> MapSeq<K, T> groupBy(Function<T, K> toKey, BinaryOperator<T> operator) {
+  default <K> MapZeroFlow<K, T> groupBy(Function<T, K> toKey, BinaryOperator<T> operator) {
 
     return groupBy(toKey, Transducer.of(operator));
   }
 
-  default <K, V, E> MapSeq<K, E> groupBy(Function<T, K> toKey, Transducer<T, V, E> transducer) {
+  default <K, V, E> MapZeroFlow<K, E> groupBy(Function<T, K> toKey, Transducer<T, V, E> transducer) {
 
     return reduce(Reducer.groupBy(toKey, transducer));
   }
 
-  default <K, E> MapSeq<K, ArrayListSeq<E>> groupBy(Function<T, K> toKey, Function<T, E> toValue) {
+  default <K, E> MapZeroFlow<K, ArrayListZeroFlow<E>> groupBy(Function<T, K> toKey, Function<T, E> toValue) {
 
     return groupBy(toKey, Reducer.mapping(toValue));
   }
@@ -776,7 +776,7 @@ public interface Seq<T> extends BaseSeq<Consumer<T>> {
     return Lazy.of(() -> reduce(transducer));
   }
 
-  default <E> Seq<E> map(Function<T, E> function, int n, Function<T, E> substitute) {
+  default <E> ZeroFlow<E> map(Function<T, E> function, int n, Function<T, E> substitute) {
 
     return n <= 0 ? map(function) : c -> {
       int[] a = {n - 1};
@@ -791,12 +791,12 @@ public interface Seq<T> extends BaseSeq<Consumer<T>> {
     };
   }
 
-  default <E> Seq<E> mapIndexed(IndexObjFunction<T, E> function) {
+  default <E> ZeroFlow<E> mapIndexed(IndexObjFunction<T, E> function) {
 
     return c -> consumeIndexed((i, t) -> c.accept(function.apply(i, t)));
   }
 
-  default <E> Seq<E> mapMaybe(Function<T, E> function) {
+  default <E> ZeroFlow<E> mapMaybe(Function<T, E> function) {
 
     return c -> consume(t -> {
       if (t != null) {
@@ -805,7 +805,7 @@ public interface Seq<T> extends BaseSeq<Consumer<T>> {
     });
   }
 
-  default <E> Seq<E> mapNotNull(Function<T, E> function) {
+  default <E> ZeroFlow<E> mapNotNull(Function<T, E> function) {
 
     return c -> consume(t -> {
       E e = function.apply(t);
@@ -815,7 +815,7 @@ public interface Seq<T> extends BaseSeq<Consumer<T>> {
     });
   }
 
-  default PairSeq<T, T> mapPair(boolean overlapping) {
+  default PairZeroFlow<T, T> mapPair(boolean overlapping) {
 
     return c -> reduce(new BooleanPair<>(false, (T) null), (p, t) -> {
       if (p.first) {
@@ -826,12 +826,12 @@ public interface Seq<T> extends BaseSeq<Consumer<T>> {
     });
   }
 
-  default Seq<ArrayListSeq<T>> mapSub(Predicate<T> takeWhile) {
+  default ZeroFlow<ArrayListZeroFlow<T>> mapSub(Predicate<T> takeWhile) {
 
     return mapSub(takeWhile, Reducer.toList());
   }
 
-  default <V> Seq<V> mapSub(Predicate<T> takeWhile, Reducer<T, V> reducer) {
+  default <V> ZeroFlow<V> mapSub(Predicate<T> takeWhile, Reducer<T, V> reducer) {
 
     Supplier<V>      supplier    = reducer.supplier();
     BiConsumer<V, T> accumulator = reducer.accumulator();
@@ -859,7 +859,7 @@ public interface Seq<T> extends BaseSeq<Consumer<T>> {
   /**
    * @return {@link E }
    *
-   * @see ItrSeq#fold(Object, BiFunction)
+   * @see ItrZeroFlow#fold(Object, BiFunction)
    */
   default <E> E fold(E init, BiFunction<E, T, E> function) {
 
@@ -868,17 +868,17 @@ public interface Seq<T> extends BaseSeq<Consumer<T>> {
     return m.it;
   }
 
-  default Seq<ArrayListSeq<T>> mapSub(T first, T last) {
+  default ZeroFlow<ArrayListZeroFlow<T>> mapSub(T first, T last) {
 
     return mapSub(first, last, Reducer.toList());
   }
 
-  default <V> Seq<V> mapSub(T first, T last, Reducer<T, V> reducer) {
+  default <V> ZeroFlow<V> mapSub(T first, T last, Reducer<T, V> reducer) {
 
     return mapSub(first::equals, last::equals, reducer);
   }
 
-  default <V> Seq<V> mapSub(Predicate<T> first, Predicate<T> last, Reducer<T, V> reducer) {
+  default <V> ZeroFlow<V> mapSub(Predicate<T> first, Predicate<T> last, Reducer<T, V> reducer) {
 
     Supplier<V>      supplier    = reducer.supplier();
     BiConsumer<V, T> accumulator = reducer.accumulator();
@@ -897,7 +897,7 @@ public interface Seq<T> extends BaseSeq<Consumer<T>> {
     });
   }
 
-  default IntSeq mapToInt(ToIntFunction<T> function) {
+  default IntZeroFlow mapToInt(ToIntFunction<T> function) {
 
     return c -> consume(t -> c.accept(function.applyAsInt(t)));
   }
@@ -927,17 +927,17 @@ public interface Seq<T> extends BaseSeq<Consumer<T>> {
     return !find(predicate).isPresent();
   }
 
-  default Seq<T> onEach(Consumer<T> consumer) {
+  default ZeroFlow<T> onEach(Consumer<T> consumer) {
 
     return c -> consume(consumer.andThen(c));
   }
 
-  default Seq<T> onEach(int n, Consumer<T> consumer) {
+  default ZeroFlow<T> onEach(int n, Consumer<T> consumer) {
 
     return c -> consume(c, n, consumer.andThen(c));
   }
 
-  default Seq<T> onEachIndexed(IndexObjConsumer<T> consumer) {
+  default ZeroFlow<T> onEachIndexed(IndexObjConsumer<T> consumer) {
 
     return c -> consumeIndexed((i, t) -> {
       consumer.accept(i, t);
@@ -945,17 +945,17 @@ public interface Seq<T> extends BaseSeq<Consumer<T>> {
     });
   }
 
-  default <A, B> PairSeq<A, B> pair(Function<T, A> f1, Function<T, B> f2) {
+  default <A, B> PairZeroFlow<A, B> pair(Function<T, A> f1, Function<T, B> f2) {
 
     return c -> consume(t -> c.accept(f1.apply(t), f2.apply(t)));
   }
 
-  default <E> PairSeq<E, T> pairBy(Function<T, E> function) {
+  default <E> PairZeroFlow<E, T> pairBy(Function<T, E> function) {
 
     return c -> consume(t -> c.accept(function.apply(t), t));
   }
 
-  default <E> PairSeq<E, T> pairByNotNull(Function<T, E> function) {
+  default <E> PairZeroFlow<E, T> pairByNotNull(Function<T, E> function) {
 
     return c -> consume(t -> {
       E e = function.apply(t);
@@ -965,12 +965,12 @@ public interface Seq<T> extends BaseSeq<Consumer<T>> {
     });
   }
 
-  default <E> PairSeq<T, E> pairWith(Function<T, E> function) {
+  default <E> PairZeroFlow<T, E> pairWith(Function<T, E> function) {
 
     return c -> consume(t -> c.accept(t, function.apply(t)));
   }
 
-  default <E> PairSeq<T, E> pairWithNotNull(Function<T, E> function) {
+  default <E> PairZeroFlow<T, E> pairWithNotNull(Function<T, E> function) {
 
     return c -> consume(t -> {
       E e = function.apply(t);
@@ -980,22 +980,22 @@ public interface Seq<T> extends BaseSeq<Consumer<T>> {
     });
   }
 
-  default Seq<T> parallel() {
+  default ZeroFlow<T> parallel() {
 
     return parallel(Async.common());
   }
 
-  default Seq<T> parallel(Async async) {
+  default ZeroFlow<T> parallel(Async async) {
 
     return c -> async.joinAll(map(t -> () -> c.accept(t)));
   }
 
-  default Seq<T> parallelNoJoin() {
+  default ZeroFlow<T> parallelNoJoin() {
 
     return parallelNoJoin(Async.common());
   }
 
-  default Seq<T> parallelNoJoin(Async async) {
+  default ZeroFlow<T> parallelNoJoin(Async async) {
 
     return c -> consume(t -> async.submit(() -> c.accept(t)));
   }
@@ -1024,22 +1024,22 @@ public interface Seq<T> extends BaseSeq<Consumer<T>> {
     consume(System.out::println);
   }
 
-  default Seq<T> replace(int n, UnaryOperator<T> operator) {
+  default ZeroFlow<T> replace(int n, UnaryOperator<T> operator) {
 
     return c -> consume(c, n, t -> c.accept(operator.apply(t)));
   }
 
-  default ArrayListSeq<T> reverse() {
+  default ArrayListZeroFlow<T> reverse() {
 
     return reduce(Reducer.reverse());
   }
 
   /**
-   * @return {@link IntSeq }
+   * @return {@link IntZeroFlow }
    *
-   * @see ItrSeq#fold(Object, BiFunction)
+   * @see ItrZeroFlow#fold(Object, BiFunction)
    */
-  default <E> Seq<E> runningFold(E init, BiFunction<E, T, E> function) {
+  default <E> ZeroFlow<E> runningFold(E init, BiFunction<E, T, E> function) {
 
     return c -> fold(init, (e, t) -> {
       e = function.apply(e, t);
@@ -1048,53 +1048,53 @@ public interface Seq<T> extends BaseSeq<Consumer<T>> {
     });
   }
 
-  default <E extends Comparable<E>> Seq<T> sortCached(Function<T, E> function) {
+  default <E extends Comparable<E>> ZeroFlow<T> sortCached(Function<T, E> function) {
 
     return map(t -> new Pair<>(t, function.apply(t)))
         .sortBy(p -> p.second)
         .map(p -> p.first);
   }
 
-  default <E extends Comparable<E>> ArrayListSeq<T> sortBy(Function<T, E> function) {
+  default <E extends Comparable<E>> ArrayListZeroFlow<T> sortBy(Function<T, E> function) {
 
     return sortWith(Comparator.comparing(function));
   }
 
-  default ArrayListSeq<T> sortWith(Comparator<T> comparator) {
+  default ArrayListZeroFlow<T> sortWith(Comparator<T> comparator) {
 
-    ArrayListSeq<T> list = toList();
+    ArrayListZeroFlow<T> list = toList();
     list.sort(comparator);
     return list;
   }
 
-  default ArrayListSeq<T> toList() {
+  default ArrayListZeroFlow<T> toList() {
 
-    return reduce(new ArrayListSeq<>(sizeOrDefault()), ArrayListSeq::add);
+    return reduce(new ArrayListZeroFlow<>(sizeOrDefault()), ArrayListZeroFlow::add);
   }
 
-  default <E extends Comparable<E>> Seq<T> sortCachedDesc(Function<T, E> function) {
+  default <E extends Comparable<E>> ZeroFlow<T> sortCachedDesc(Function<T, E> function) {
 
     return map(t -> new Pair<>(t, function.apply(t)))
         .sortByDesc(p -> p.second)
         .map(p -> p.first);
   }
 
-  default <E extends Comparable<E>> ArrayListSeq<T> sortByDesc(Function<T, E> function) {
+  default <E extends Comparable<E>> ArrayListZeroFlow<T> sortByDesc(Function<T, E> function) {
 
     return sortWith(Comparator.comparing(function).reversed());
   }
 
-  default ArrayListSeq<T> sorted() {
+  default ArrayListZeroFlow<T> sorted() {
 
     return sortWith(null);
   }
 
-  default ArrayListSeq<T> sortedDesc() {
+  default ArrayListZeroFlow<T> sortedDesc() {
 
     return sortWith(Collections.reverseOrder());
   }
 
-  default ArrayListSeq<T> sortWithDesc(Comparator<T> comparator) {
+  default ArrayListZeroFlow<T> sortWithDesc(Comparator<T> comparator) {
 
     return sortWith(comparator.reversed());
   }
@@ -1114,7 +1114,7 @@ public interface Seq<T> extends BaseSeq<Consumer<T>> {
     return reduce(Reducer.sumLong(function));
   }
 
-  default Seq<T> take(int n) {
+  default ZeroFlow<T> take(int n) {
 
     return n <= 0 ? empty() : c -> {
       int[] i = {n};
@@ -1127,12 +1127,12 @@ public interface Seq<T> extends BaseSeq<Consumer<T>> {
     };
   }
 
-  default Seq<T> takeWhile(BiPredicate<T, T> testPrevCurr) {
+  default ZeroFlow<T> takeWhile(BiPredicate<T, T> testPrevCurr) {
 
     return takeWhile(t -> t, testPrevCurr);
   }
 
-  default <E> Seq<T> takeWhile(Function<T, E> function, BiPredicate<E, E> testPrevCurr) {
+  default <E> ZeroFlow<T> takeWhile(Function<T, E> function, BiPredicate<E, E> testPrevCurr) {
 
     return c -> {
       Mutable<E> m = new Mutable<>(null);
@@ -1148,7 +1148,7 @@ public interface Seq<T> extends BaseSeq<Consumer<T>> {
     };
   }
 
-  default Seq<T> takeWhile(Predicate<T> predicate) {
+  default ZeroFlow<T> takeWhile(Predicate<T> predicate) {
 
     return c -> consumeTillStop(t -> {
       if (predicate.test(t)) {
@@ -1159,17 +1159,17 @@ public interface Seq<T> extends BaseSeq<Consumer<T>> {
     });
   }
 
-  default Seq<T> takeWhileEquals() {
+  default ZeroFlow<T> takeWhileEquals() {
 
     return takeWhile(t -> t, Objects::equals);
   }
 
-  default <E> Seq<T> takeWhileEquals(Function<T, E> function) {
+  default <E> ZeroFlow<T> takeWhileEquals(Function<T, E> function) {
 
     return takeWhile(function, Objects::equals);
   }
 
-  default Seq<T> timeLimit(long millis) {
+  default ZeroFlow<T> timeLimit(long millis) {
 
     return millis * 1000000 <= 0 ? this : c -> {
       long end = System.nanoTime() + millis;
@@ -1184,52 +1184,52 @@ public interface Seq<T> extends BaseSeq<Consumer<T>> {
 
   default T[] toObjArray(IntFunction<T[]> initializer) {
 
-    SizedSeq<T> ts = cache();
-    T[]         a  = initializer.apply(ts.size());
+    SizedZeroFlow<T> ts = cache();
+    T[]              a  = initializer.apply(ts.size());
     ts.consumeIndexed((i, t) -> a[i] = t);
     return a;
   }
 
-  default SizedSeq<T> cache() {
+  default SizedZeroFlow<T> cache() {
 
     return toBatched();
   }
 
   default int[] toIntArray(ToIntFunction<T> function) {
 
-    SizedSeq<T> ts = cache();
-    int[]       a  = new int[ts.size()];
+    SizedZeroFlow<T> ts = cache();
+    int[]            a  = new int[ts.size()];
     ts.consumeIndexed((i, t) -> a[i] = function.applyAsInt(t));
     return a;
   }
 
   default double[] toDoubleArray(ToDoubleFunction<T> function) {
 
-    SizedSeq<T> ts = cache();
-    double[]    a  = new double[ts.size()];
+    SizedZeroFlow<T> ts = cache();
+    double[]         a  = new double[ts.size()];
     ts.consumeIndexed((i, t) -> a[i] = function.applyAsDouble(t));
     return a;
   }
 
   default long[] toLongArray(ToLongFunction<T> function) {
 
-    SizedSeq<T> ts = cache();
-    long[]      a  = new long[ts.size()];
+    SizedZeroFlow<T> ts = cache();
+    long[]           a  = new long[ts.size()];
     ts.consumeIndexed((i, t) -> a[i] = function.applyAsLong(t));
     return a;
   }
 
   default boolean[] toBooleanArray(Predicate<T> function) {
 
-    SizedSeq<T> ts = cache();
-    boolean[]   a  = new boolean[ts.size()];
+    SizedZeroFlow<T> ts = cache();
+    boolean[]        a  = new boolean[ts.size()];
     ts.consumeIndexed((i, t) -> a[i] = function.test(t));
     return a;
   }
 
-  default ConcurrentQueueSeq<T> toConcurrentQueue() {
+  default ConcurrentQueueZeroFlow<T> toConcurrentQueue() {
 
-    return reduce(new ConcurrentQueueSeq<>(), ConcurrentQueueSeq::add);
+    return reduce(new ConcurrentQueueZeroFlow<>(), ConcurrentQueueZeroFlow::add);
   }
 
   default <E> Lazy<E> toLazy(Reducer<T, E> reducer) {
@@ -1242,42 +1242,42 @@ public interface Seq<T> extends BaseSeq<Consumer<T>> {
     return Lazy.of(() -> reduce(transducer));
   }
 
-  default LinkedListSeq<T> toLinkedList() {
+  default LinkedListZeroFlow<T> toLinkedList() {
 
-    return reduce(new LinkedListSeq<>(), LinkedListSeq::add);
+    return reduce(new LinkedListZeroFlow<>(), LinkedListZeroFlow::add);
   }
 
-  default <K> MapSeq<K, T> toMapBy(Function<T, K> toKey) {
+  default <K> MapZeroFlow<K, T> toMapBy(Function<T, K> toKey) {
 
     return toMap(toKey, v -> v);
   }
 
-  default <K, V> MapSeq<K, V> toMap(Function<T, K> toKey, Function<T, V> toValue) {
+  default <K, V> MapZeroFlow<K, V> toMap(Function<T, K> toKey, Function<T, V> toValue) {
 
     return reduce(Reducer.toMap(() -> new LinkedHashMap<>(sizeOrDefault()), toKey, toValue));
   }
 
-  default <V> MapSeq<T, V> toMapWith(Function<T, V> toValue) {
+  default <V> MapZeroFlow<T, V> toMapWith(Function<T, V> toValue) {
 
     return toMap(k -> k, toValue);
   }
 
-  default SetSeq<T> toSet() {
+  default SetZeroFlow<T> toSet() {
 
     return reduce(Reducer.toSet(sizeOrDefault()));
   }
 
-  default <A, B, D> TripleSeq<A, B, D> triple(BiConsumer<TripleConsumer<A, B, D>, T> consumer) {
+  default <A, B, D> TripleZeroFlow<A, B, D> triple(BiConsumer<TripleConsumer<A, B, D>, T> consumer) {
 
     return c -> consume(t -> consumer.accept(c, t));
   }
 
-  default <A, B, D> TripleSeq<A, B, D> triple(Function<T, A> f1, Function<T, B> f2, Function<T, D> f3) {
+  default <A, B, D> TripleZeroFlow<A, B, D> triple(Function<T, A> f1, Function<T, B> f2, Function<T, D> f3) {
 
     return c -> consume(t -> c.accept(f1.apply(t), f2.apply(t), f3.apply(t)));
   }
 
-  default Seq<ArrayListSeq<T>> windowed(int size, int step, boolean allowPartial) {
+  default ZeroFlow<ArrayListZeroFlow<T>> windowed(int size, int step, boolean allowPartial) {
 
     return windowed(size, step, allowPartial, Reducer.toList());
   }
@@ -1296,9 +1296,9 @@ public interface Seq<T> extends BaseSeq<Consumer<T>> {
    * @param <V>
    *     窗口的类型，既是容纳窗口中数据的容器类型
    *
-   * @return {@link Seq }<{@link V }>
+   * @return {@link ZeroFlow }<{@link V }>
    */
-  default <V> Seq<V> windowed(int size, int step, boolean allowPartial, Reducer<T, V> reducer) {
+  default <V> ZeroFlow<V> windowed(int size, int step, boolean allowPartial, Reducer<T, V> reducer) {
 
     if (size <= 0 || step <= 0) {
       throw new IllegalArgumentException("non-positive size or step");
@@ -1353,12 +1353,12 @@ public interface Seq<T> extends BaseSeq<Consumer<T>> {
     return a[0];
   }
 
-  default <V, E> Seq<E> windowed(int size, int step, boolean allowPartial, Transducer<T, V, E> transducer) {
+  default <V, E> ZeroFlow<E> windowed(int size, int step, boolean allowPartial, Transducer<T, V, E> transducer) {
 
     return windowed(size, step, allowPartial, transducer.reducer()).map(transducer.transformer());
   }
 
-  default Seq<ArrayListSeq<T>> windowedByTime(long timeMillis) {
+  default ZeroFlow<ArrayListZeroFlow<T>> windowedByTime(long timeMillis) {
 
     return windowedByTime(timeMillis, Reducer.toList());
   }
@@ -1366,9 +1366,9 @@ public interface Seq<T> extends BaseSeq<Consumer<T>> {
   /**
    * 按时间的滑动窗口实现
    *
-   * @return {@link Seq }<{@link V }>
+   * @return {@link ZeroFlow }<{@link V }>
    */
-  default <V> Seq<V> windowedByTime(long timeMillis, Reducer<T, V> reducer) {
+  default <V> ZeroFlow<V> windowedByTime(long timeMillis, Reducer<T, V> reducer) {
 
     if (timeMillis <= 0) {
       throw new IllegalArgumentException("non-positive time");
@@ -1395,7 +1395,7 @@ public interface Seq<T> extends BaseSeq<Consumer<T>> {
     };
   }
 
-  default Seq<ArrayListSeq<T>> windowedByTime(long timeMillis, long stepMillis) {
+  default ZeroFlow<ArrayListZeroFlow<T>> windowedByTime(long timeMillis, long stepMillis) {
 
     return windowedByTime(timeMillis, stepMillis, Reducer.toList());
   }
@@ -1410,9 +1410,9 @@ public interface Seq<T> extends BaseSeq<Consumer<T>> {
    * @param reducer
    *     生产窗口的类型
    *
-   * @return {@link Seq }<{@link V }>
+   * @return {@link ZeroFlow }<{@link V }>
    */
-  default <V> Seq<V> windowedByTime(long timeMillis, long stepMillis, Reducer<T, V> reducer) {
+  default <V> ZeroFlow<V> windowedByTime(long timeMillis, long stepMillis, Reducer<T, V> reducer) {
 
     if (timeMillis <= 0 || stepMillis <= 0) {
       throw new IllegalArgumentException("non-positive time or step");
@@ -1445,42 +1445,42 @@ public interface Seq<T> extends BaseSeq<Consumer<T>> {
     };
   }
 
-  default <V, E> Seq<E> windowedByTime(long timeMillis, long stepMillis, Transducer<T, V, E> transducer) {
+  default <V, E> ZeroFlow<E> windowedByTime(long timeMillis, long stepMillis, Transducer<T, V, E> transducer) {
 
     return windowedByTime(timeMillis, stepMillis, transducer.reducer()).map(transducer.transformer());
   }
 
-  default <V, E> Seq<E> windowedByTime(long timeMillis, Transducer<T, V, E> transducer) {
+  default <V, E> ZeroFlow<E> windowedByTime(long timeMillis, Transducer<T, V, E> transducer) {
 
     return windowedByTime(timeMillis, transducer.reducer()).map(transducer.transformer());
   }
 
-  default Seq<IntPair<T>> withInt(ToIntFunction<T> function) {
+  default ZeroFlow<IntPair<T>> withInt(ToIntFunction<T> function) {
 
     return map(t -> new IntPair<>(function.applyAsInt(t), t));
   }
 
-  default Seq<DoublePair<T>> withDouble(ToDoubleFunction<T> function) {
+  default ZeroFlow<DoublePair<T>> withDouble(ToDoubleFunction<T> function) {
 
     return map(t -> new DoublePair<>(function.applyAsDouble(t), t));
   }
 
-  default Seq<LongPair<T>> withLong(ToLongFunction<T> function) {
+  default ZeroFlow<LongPair<T>> withLong(ToLongFunction<T> function) {
 
     return map(t -> new LongPair<>(function.applyAsLong(t), t));
   }
 
-  default Seq<BooleanPair<T>> withBool(Predicate<T> function) {
+  default ZeroFlow<BooleanPair<T>> withBool(Predicate<T> function) {
 
     return map(t -> new BooleanPair<>(function.test(t), t));
   }
 
-  default Seq<IntPair<T>> withIndex() {
+  default ZeroFlow<IntPair<T>> withIndex() {
 
     return c -> consumeIndexed((i, t) -> c.accept(new IntPair<>(i, t)));
   }
 
-  default <B, C> TripleSeq<T, B, C> zip(Iterable<B> bs, Iterable<C> cs) {
+  default <B, C> TripleZeroFlow<T, B, C> zip(Iterable<B> bs, Iterable<C> cs) {
 
     return c -> zip(bs, cs, c);
   }
@@ -1492,7 +1492,7 @@ public interface Seq<T> extends BaseSeq<Consumer<T>> {
     consumeTillStop(t -> consumer.accept(t, ItrUtil.pop(bi), ItrUtil.pop(ci)));
   }
 
-  default <E> PairSeq<T, E> zip(Iterable<E> iterable) {
+  default <E> PairZeroFlow<T, E> zip(Iterable<E> iterable) {
 
     return c -> zip(iterable, c);
   }
@@ -1547,7 +1547,7 @@ public interface Seq<T> extends BaseSeq<Consumer<T>> {
 
   class Empty {
 
-    static final Seq<Object> emptySeq = c -> {
+    static final ZeroFlow<Object> emptySeq = c -> {
     };
 
     static final Consumer<Object> nothing = t -> {

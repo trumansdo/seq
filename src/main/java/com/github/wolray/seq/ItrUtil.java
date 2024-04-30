@@ -44,7 +44,7 @@ public interface ItrUtil {
 
   static <T> T pop(Iterator<T> iterator) {
 
-    return iterator.hasNext() ? iterator.next() : Seq.stop();
+    return iterator.hasNext() ? iterator.next() : ZeroFlow.stop();
   }
 
   /**
@@ -87,7 +87,7 @@ public interface ItrUtil {
             return t;
           }
         }
-        return Seq.stop();
+        return ZeroFlow.stop();
       }
     };
   }
@@ -152,13 +152,13 @@ public interface ItrUtil {
             return opt.get();
           }
         }
-        return Seq.stop();
+        return ZeroFlow.stop();
       }
     };
   }
 
   /**
-   * 保持与方法{@link Seq#consume(Consumer, int, Consumer)} 判断逻辑，小于等于0用另一个逻辑替换处理
+   * 保持与方法{@link ZeroFlow#consume(Consumer, int, Consumer)} 判断逻辑，小于等于0用另一个逻辑替换处理
    *
    * @param function
    *     小于等于0的处理
@@ -191,7 +191,7 @@ public interface ItrUtil {
    *
    * @return {@link Iterator }<{@link E }>
    */
-  static <T, E> Iterator<E> mapIndexed(Iterator<T> iterator, Seq.IndexObjFunction<T, E> function) {
+  static <T, E> Iterator<E> mapIndexed(Iterator<T> iterator, ZeroFlow.IndexObjFunction<T, E> function) {
 
     return new MapItr<T, E>(iterator) {
 
@@ -219,7 +219,7 @@ public interface ItrUtil {
       @Override
       public T pick() {
 
-        return i-- > 0 ? pop(iterator) : Seq.stop();
+        return i-- > 0 ? pop(iterator) : ZeroFlow.stop();
       }
     };
   }
@@ -249,7 +249,7 @@ public interface ItrUtil {
           last = curr;
           return t;
         } else {
-          return Seq.stop();
+          return ZeroFlow.stop();
         }
       }
     };
@@ -268,7 +268,7 @@ public interface ItrUtil {
       public T pick() {
 
         T t = pop(iterator);
-        return predicate.test(t) ? t : Seq.stop();
+        return predicate.test(t) ? t : ZeroFlow.stop();
       }
     };
   }

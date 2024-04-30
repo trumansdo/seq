@@ -1,6 +1,6 @@
 package com.github.wolray.seq;
 
-import com.github.wolray.seq.pair.PairSeq;
+import com.github.wolray.seq.pair.PairZeroFlow;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.Map;
@@ -16,36 +16,36 @@ import java.util.function.Function;
  *
  * @author wolray
  */
-public interface MapSeq<K, V> extends PairSeq<K, V>, Map<K, V> {
+public interface MapZeroFlow<K, V> extends PairZeroFlow<K, V>, Map<K, V> {
 
-  static <K, V> MapSeq<K, V> hash() {
+  static <K, V> MapZeroFlow<K, V> hash() {
 
-    return new LinkedHashMapSeq<>();
+    return new LinkedHashMapZeroFlow<>();
   }
 
-  static <K, V> MapSeq<K, V> hash(int initialCapacity) {
+  static <K, V> MapZeroFlow<K, V> hash(int initialCapacity) {
 
-    return new LinkedHashMapSeq<>(initialCapacity);
+    return new LinkedHashMapZeroFlow<>(initialCapacity);
   }
 
-  static <K, V> MapSeq<K, V> of(Map<K, V> map) {
+  static <K, V> MapZeroFlow<K, V> of(Map<K, V> map) {
 
-    return map instanceof MapSeq ? (MapSeq<K, V>) map : new Proxy<>(map);
+    return map instanceof MapZeroFlow ? (MapZeroFlow<K, V>) map : new Proxy<>(map);
   }
 
   /**
    * 内部容器转成{@link TreeMap}
    *
-   * @return {@link MapSeq }<{@link K }, {@link V }>
+   * @return {@link MapZeroFlow }<{@link K }, {@link V }>
    */
-  static <K, V> MapSeq<K, V> tree(Comparator<K> comparator) {
+  static <K, V> MapZeroFlow<K, V> tree(Comparator<K> comparator) {
 
     return new Proxy<>(new TreeMap<>(comparator));
   }
 
-  SetSeq<K> keysSeq();
+  SetZeroFlow<K> keysSeq();
 
-  CollectionSeq<V> valuesSeq();
+  CollectionZeroFlow<V> valuesSeq();
 
   @Override
   default void consume(BiConsumer<K, V> consumer) {
@@ -53,7 +53,7 @@ public interface MapSeq<K, V> extends PairSeq<K, V>, Map<K, V> {
     forEach(consumer);
   }
 
-  default <E> MapSeq<E, V> mapByKey(BiFunction<K, V, E> function) {
+  default <E> MapZeroFlow<E, V> mapByKey(BiFunction<K, V, E> function) {
 
     return toMap(newForMapping(), function, (k, v) -> v);
   }
@@ -61,27 +61,27 @@ public interface MapSeq<K, V> extends PairSeq<K, V>, Map<K, V> {
   /**
    * 做map转换操作时应该重新创建容器
    *
-   * @return {@link MapSeq }<{@link A }, {@link B }>
+   * @return {@link MapZeroFlow }<{@link A }, {@link B }>
    */
-  <A, B> MapSeq<A, B> newForMapping();
+  <A, B> MapZeroFlow<A, B> newForMapping();
 
-  default <E> MapSeq<E, V> mapByKey(Function<K, E> function) {
+  default <E> MapZeroFlow<E, V> mapByKey(Function<K, E> function) {
 
     return toMap(newForMapping(), (k, v) -> function.apply(k), (k, v) -> v);
   }
 
-  default <E> MapSeq<K, E> mapByValue(BiFunction<K, V, E> function) {
+  default <E> MapZeroFlow<K, E> mapByValue(BiFunction<K, V, E> function) {
 
     return toMap(newForMapping(), (k, v) -> k, function);
   }
 
-  default <E> MapSeq<K, E> mapByValue(Function<V, E> function) {
+  default <E> MapZeroFlow<K, E> mapByValue(Function<V, E> function) {
 
     return toMap(newForMapping(), (k, v) -> k, (k, v) -> function.apply(v));
   }
 
   @Override
-  default MapSeq<K, V> toMap() {
+  default MapZeroFlow<K, V> toMap() {
 
     return this;
   }
@@ -92,54 +92,54 @@ public interface MapSeq<K, V> extends PairSeq<K, V>, Map<K, V> {
   }
 
   @SuppressWarnings("unchecked")
-  default <E> MapSeq<K, E> replaceValue(BiFunction<K, V, E> function) {
+  default <E> MapZeroFlow<K, E> replaceValue(BiFunction<K, V, E> function) {
 
-    MapSeq<K, Object> map = (MapSeq<K, Object>) this;
+    MapZeroFlow<K, Object> map = (MapZeroFlow<K, Object>) this;
     map.entrySet().forEach(e -> e.setValue(function.apply(e.getKey(), (V) e.getValue())));
-    return (MapSeq<K, E>) map;
+    return (MapZeroFlow<K, E>) map;
   }
 
   @SuppressWarnings("unchecked")
-  default <E> MapSeq<K, E> replaceValue(Function<V, E> function) {
+  default <E> MapZeroFlow<K, E> replaceValue(Function<V, E> function) {
 
-    MapSeq<K, Object> map = (MapSeq<K, Object>) this;
+    MapZeroFlow<K, Object> map = (MapZeroFlow<K, Object>) this;
     map.entrySet().forEach(e -> e.setValue(function.apply((V) e.getValue())));
-    return (MapSeq<K, E>) map;
+    return (MapZeroFlow<K, E>) map;
   }
 
-  default <E extends Comparable<E>> ArrayListSeq<Entry<K, V>> sort(BiFunction<K, V, E> function) {
+  default <E extends Comparable<E>> ArrayListZeroFlow<Entry<K, V>> sort(BiFunction<K, V, E> function) {
 
     return entrySeq().sortBy(e -> function.apply(e.getKey(), e.getValue()));
   }
 
-  SetSeq<Entry<K, V>> entrySeq();
+  SetZeroFlow<Entry<K, V>> entrySeq();
 
-  default ArrayListSeq<Entry<K, V>> sortByKey(Comparator<K> comparator) {
+  default ArrayListZeroFlow<Entry<K, V>> sortByKey(Comparator<K> comparator) {
 
     return entrySeq().sortWith(Entry.comparingByKey(comparator));
   }
 
-  default ArrayListSeq<Entry<K, V>> sortByValue(Comparator<V> comparator) {
+  default ArrayListZeroFlow<Entry<K, V>> sortByValue(Comparator<V> comparator) {
 
     return entrySeq().sortWith(Entry.comparingByValue(comparator));
   }
 
-  default <E extends Comparable<E>> ArrayListSeq<Entry<K, V>> sortDesc(BiFunction<K, V, E> function) {
+  default <E extends Comparable<E>> ArrayListZeroFlow<Entry<K, V>> sortDesc(BiFunction<K, V, E> function) {
 
     return entrySeq().sortByDesc(e -> function.apply(e.getKey(), e.getValue()));
   }
 
-  default ArrayListSeq<Entry<K, V>> sortDescByKey(Comparator<K> comparator) {
+  default ArrayListZeroFlow<Entry<K, V>> sortDescByKey(Comparator<K> comparator) {
 
     return entrySeq().sortWithDesc(Entry.comparingByKey(comparator));
   }
 
-  default ArrayListSeq<Entry<K, V>> sortDescByValue(Comparator<V> comparator) {
+  default ArrayListZeroFlow<Entry<K, V>> sortDescByValue(Comparator<V> comparator) {
 
     return entrySeq().sortWithDesc(Entry.comparingByValue(comparator));
   }
 
-  class Proxy<K, V> implements MapSeq<K, V> {
+  class Proxy<K, V> implements MapZeroFlow<K, V> {
 
     public final Map<K, V> backer;
 
@@ -150,25 +150,25 @@ public interface MapSeq<K, V> extends PairSeq<K, V>, Map<K, V> {
     }
 
     @Override
-    public SetSeq<K> keysSeq() {
+    public SetZeroFlow<K> keysSeq() {
 
-      return SetSeq.of(backer.keySet());
+      return SetZeroFlow.of(backer.keySet());
     }
 
     @Override
-    public CollectionSeq<V> valuesSeq() {
+    public CollectionZeroFlow<V> valuesSeq() {
 
-      return CollectionSeq.of(backer.values());
+      return CollectionZeroFlow.of(backer.values());
     }
 
     @Override
-    public SetSeq<Entry<K, V>> entrySeq() {
+    public SetZeroFlow<Entry<K, V>> entrySeq() {
 
-      return SetSeq.of(backer.entrySet());
+      return SetZeroFlow.of(backer.entrySet());
     }
 
     @Override
-    public <A, B> MapSeq<A, B> newForMapping() {
+    public <A, B> MapZeroFlow<A, B> newForMapping() {
 
       if (backer instanceof TreeMap) {
         return new Proxy<>(new TreeMap<>());
@@ -176,7 +176,7 @@ public interface MapSeq<K, V> extends PairSeq<K, V>, Map<K, V> {
       if (backer instanceof ConcurrentHashMap) {
         return new Proxy<>(new ConcurrentHashMap<>(backer.size()));
       }
-      return new LinkedHashMapSeq<>(backer.size());
+      return new LinkedHashMapZeroFlow<>(backer.size());
     }
 
     @Override

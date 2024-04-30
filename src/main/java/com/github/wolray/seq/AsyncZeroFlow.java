@@ -6,17 +6,17 @@ import java.util.function.Function;
 /**
  * @author wolray
  */
-public abstract class AsyncSeq<T> implements Seq<T> {
+public abstract class AsyncZeroFlow<T> implements ZeroFlow<T> {
 
   protected final Async async;
 
-  protected final Seq<T> source;
+  protected final ZeroFlow<T> source;
 
   protected Object task;
 
   protected boolean cancelled;
 
-  AsyncSeq(Async async, Seq<T> source) {
+  AsyncZeroFlow(Async async, ZeroFlow<T> source) {
 
     this.async  = async;
     this.source = source;
@@ -42,41 +42,41 @@ public abstract class AsyncSeq<T> implements Seq<T> {
     }
   }
 
-  public AsyncSeq<T> onStart(Runnable runnable) {
+  public AsyncZeroFlow<T> onStart(Runnable runnable) {
 
-    return new AsyncSeq<T>(async, source) {
+    return new AsyncZeroFlow<T>(async, source) {
 
       @Override
       public void consume(Consumer<T> consumer) {
 
         runnable.run();
-        AsyncSeq.this.consume(consumer);
+        AsyncZeroFlow.this.consume(consumer);
       }
     };
   }
 
-  public AsyncSeq<T> onCompletion(Runnable runnable) {
+  public AsyncZeroFlow<T> onCompletion(Runnable runnable) {
 
-    return new AsyncSeq<T>(async, source) {
+    return new AsyncZeroFlow<T>(async, source) {
 
       @Override
       public void consume(Consumer<T> consumer) {
 
-        AsyncSeq.this.consume(consumer);
+        AsyncZeroFlow.this.consume(consumer);
         runnable.run();
       }
     };
   }
 
   @Override
-  public <E> AsyncSeq<E> map(Function<T, E> function) {
+  public <E> AsyncZeroFlow<E> map(Function<T, E> function) {
 
-    return new AsyncSeq<E>(async, source.map(function)) {
+    return new AsyncZeroFlow<E>(async, source.map(function)) {
 
       @Override
       public void consume(Consumer<E> consumer) {
 
-        AsyncSeq.this.consume(t -> consumer.accept(function.apply(t)));
+        AsyncZeroFlow.this.consume(t -> consumer.accept(function.apply(t)));
       }
     };
   }

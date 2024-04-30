@@ -7,14 +7,14 @@ import java.util.Queue;
  *
  * @author wolray
  */
-public interface QueueSeq<T> extends SizedSeq<T>, Queue<T> {
+public interface QueueZeroFlow<T> extends SizedZeroFlow<T>, Queue<T> {
 
-  static <T> QueueSeq<T> of(Queue<T> queue) {
+  static <T> QueueZeroFlow<T> of(Queue<T> queue) {
 
-    return queue instanceof QueueSeq ? (QueueSeq<T>) queue : new Proxy<>(queue);
+    return queue instanceof QueueZeroFlow ? (QueueZeroFlow<T>) queue : new Proxy<>(queue);
   }
 
-  class Proxy<T> extends CollectionSeq.Proxy<T, Queue<T>> implements QueueSeq<T> {
+  class Proxy<T> extends CollectionZeroFlow.Proxy<T, Queue<T>> implements QueueZeroFlow<T> {
 
     public Proxy(Queue<T> backer) {
 

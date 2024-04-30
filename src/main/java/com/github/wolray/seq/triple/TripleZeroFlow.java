@@ -1,7 +1,7 @@
 package com.github.wolray.seq.triple;
 
-import com.github.wolray.seq.BaseSeq;
-import com.github.wolray.seq.Seq;
+import com.github.wolray.seq.BaseZeroFlow;
+import com.github.wolray.seq.ZeroFlow;
 import java.util.function.Function;
 
 /**
@@ -9,12 +9,12 @@ import java.util.function.Function;
  *
  * @author wolray
  */
-public interface TripleSeq<A, B, C> extends BaseSeq<TripleConsumer<A, B, C>> {
+public interface TripleZeroFlow<A, B, C> extends BaseZeroFlow<TripleConsumer<A, B, C>> {
 
   @SuppressWarnings("unchecked")
-  static <A, B, C> TripleSeq<A, B, C> empty() {
+  static <A, B, C> TripleZeroFlow<A, B, C> empty() {
 
-    return (TripleSeq<A, B, C>) Empty.emptySeq;
+    return (TripleZeroFlow<A, B, C>) Empty.emptySeq;
   }
 
   @SuppressWarnings("unchecked")
@@ -23,7 +23,7 @@ public interface TripleSeq<A, B, C> extends BaseSeq<TripleConsumer<A, B, C>> {
     return (TripleConsumer<A, B, C>) Empty.nothing;
   }
 
-  default TripleSeq<A, B, C> filter(TriPredicate<A, B, C> predicate) {
+  default TripleZeroFlow<A, B, C> filter(TriPredicate<A, B, C> predicate) {
 
     return cs -> consume((a, b, c) -> {
       if (predicate.test(a, b, c)) {
@@ -39,62 +39,62 @@ public interface TripleSeq<A, B, C> extends BaseSeq<TripleConsumer<A, B, C>> {
       t.first  = a;
       t.second = b;
       t.third  = c;
-      Seq.stop();
+      ZeroFlow.stop();
     });
     return t;
   }
 
-  default Seq<A> keepFirst() {
+  default ZeroFlow<A> keepFirst() {
 
     return cs -> consume((a, b, c) -> cs.accept(a));
   }
 
-  default Seq<B> keepSecond() {
+  default ZeroFlow<B> keepSecond() {
 
     return cs -> consume((a, b, c) -> cs.accept(b));
   }
 
-  default Seq<C> keepThird() {
+  default ZeroFlow<C> keepThird() {
 
     return cs -> consume((a, b, c) -> cs.accept(c));
   }
 
-  default <T> TripleSeq<T, B, C> mapFirst(TripleFunction<A, B, C, T> function) {
+  default <T> TripleZeroFlow<T, B, C> mapFirst(TripleFunction<A, B, C, T> function) {
 
     return cs -> consume((a, b, c) -> cs.accept(function.apply(a, b, c), b, c));
   }
 
-  default <T> TripleSeq<T, B, C> mapFirst(Function<A, T> function) {
+  default <T> TripleZeroFlow<T, B, C> mapFirst(Function<A, T> function) {
 
     return cs -> consume((a, b, c) -> cs.accept(function.apply(a), b, c));
   }
 
-  default <T> TripleSeq<A, T, C> mapSecond(TripleFunction<A, B, C, T> function) {
+  default <T> TripleZeroFlow<A, T, C> mapSecond(TripleFunction<A, B, C, T> function) {
 
     return cs -> consume((a, b, c) -> cs.accept(a, function.apply(a, b, c), c));
   }
 
-  default <T> TripleSeq<A, T, C> mapSecond(Function<B, T> function) {
+  default <T> TripleZeroFlow<A, T, C> mapSecond(Function<B, T> function) {
 
     return cs -> consume((a, b, c) -> cs.accept(a, function.apply(b), c));
   }
 
-  default <T> TripleSeq<A, B, T> mapThird(TripleFunction<A, B, C, T> function) {
+  default <T> TripleZeroFlow<A, B, T> mapThird(TripleFunction<A, B, C, T> function) {
 
     return cs -> consume((a, b, c) -> cs.accept(a, b, function.apply(a, b, c)));
   }
 
-  default <T> TripleSeq<A, B, T> mapThird(Function<C, T> function) {
+  default <T> TripleZeroFlow<A, B, T> mapThird(Function<C, T> function) {
 
     return cs -> consume((a, b, c) -> cs.accept(a, b, function.apply(c)));
   }
 
-  default Seq<Triple<A, B, C>> tripled() {
+  default ZeroFlow<Triple<A, B, C>> tripled() {
 
     return map(Triple::new);
   }
 
-  default <T> Seq<T> map(TripleFunction<A, B, C, T> function) {
+  default <T> ZeroFlow<T> map(TripleFunction<A, B, C, T> function) {
 
     return cs -> consume((a, b, c) -> cs.accept(function.apply(a, b, c)));
   }
@@ -107,7 +107,7 @@ public interface TripleSeq<A, B, C> extends BaseSeq<TripleConsumer<A, B, C>> {
 
   class Empty {
 
-    static final TripleSeq<Object, Object, Object> emptySeq = cs -> {
+    static final TripleZeroFlow<Object, Object, Object> emptySeq = cs -> {
     };
 
     static final TripleConsumer<Object, Object, Object> nothing = (a, b, c) -> {

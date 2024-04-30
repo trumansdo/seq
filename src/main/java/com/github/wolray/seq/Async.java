@@ -52,7 +52,7 @@ public interface Async {
       }
 
       @Override
-      public void joinAll(Seq<Runnable> tasks) {
+      public void joinAll(ZeroFlow<Runnable> tasks) {
 
         CompletableFuture<?>[] futures = tasks
             .map(t -> CompletableFuture.runAsync(t, executor))
@@ -81,10 +81,10 @@ public interface Async {
       }
 
       @Override
-      public void joinAll(Seq<Runnable> tasks) {
+      public void joinAll(ZeroFlow<Runnable> tasks) {
 
-        ArrayListSeq<Runnable> list  = tasks.toList();
-        CountDownLatch         latch = new CountDownLatch(list.size());
+        ArrayListZeroFlow<Runnable> list  = tasks.toList();
+        CountDownLatch              latch = new CountDownLatch(list.size());
         list.consume(r -> factory.newThread(() -> {
           r.run();
           latch.countDown();
@@ -103,18 +103,18 @@ public interface Async {
     }
   }
 
-  static <T> Seq<T> sourceOf(Seq<T> seq) {
+  static <T> ZeroFlow<T> sourceOf(ZeroFlow<T> seq) {
 
-    return seq instanceof AsyncSeq ? ((AsyncSeq<T>) seq).source : seq;
+    return seq instanceof AsyncZeroFlow ? ((AsyncZeroFlow<T>) seq).source : seq;
   }
 
   void join(Object task);
 
-  void joinAll(Seq<Runnable> tasks);
+  void joinAll(ZeroFlow<Runnable> tasks);
 
-  default <T> AsyncSeq<T> toAsync(Seq<T> seq) {
+  default <T> AsyncZeroFlow<T> toAsync(ZeroFlow<T> seq) {
 
-    return new AsyncSeq<T>(this, sourceOf(seq)) {
+    return new AsyncZeroFlow<T>(this, sourceOf(seq)) {
 
       @Override
       public void consume(Consumer<T> consumer) {
@@ -122,7 +122,7 @@ public interface Async {
         checkState();
         task = submit(() -> source.consumeTillStop(t -> {
           if (cancelled) {
-            Seq.stop();
+            ZeroFlow.stop();
           }
           consumer.accept(t);
         }));
@@ -132,9 +132,9 @@ public interface Async {
 
   Object submit(Runnable runnable);
 
-  default <T> AsyncSeq<T> toChannel(Seq<T> seq) {
+  default <T> AsyncZeroFlow<T> toChannel(ZeroFlow<T> seq) {
 
-    return new AsyncSeq<T>(this, sourceOf(seq)) {
+    return new AsyncZeroFlow<T>(this, sourceOf(seq)) {
 
       @Override
       public void consume(Consumer<T> consumer) {
@@ -144,7 +144,7 @@ public interface Async {
         task = submit(() -> {
           source.consumeTillStop(t -> {
             if (cancelled) {
-              Seq.stop();
+              ZeroFlow.stop();
             }
             if (channel.isEmpty()) {
               channel.offer(t);
@@ -169,10 +169,10 @@ public interface Async {
     };
   }
 
-  default <T> Seq<T> toShared(int buffer, boolean delay, Seq<T> seq) {
+  default <T> ZeroFlow<T> toShared(int buffer, boolean delay, ZeroFlow<T> seq) {
 
     ForkJoin.checkForHot(this);
-    Seq<T>         source = sourceOf(seq);
+    ZeroFlow<T> source = sourceOf(seq);
     SharedArray<T> array  = new SharedArray<>(buffer);
     Runnable emit = () -> {
       source.consume(t -> {
@@ -218,10 +218,10 @@ public interface Async {
     };
   }
 
-  default <T> Seq<T> toState(boolean delay, Seq<T> seq) {
+  default <T> ZeroFlow<T> toState(boolean delay, ZeroFlow<T> seq) {
 
     ForkJoin.checkForHot(this);
-    Seq<T>        source = sourceOf(seq);
+    ZeroFlow<T> source = sourceOf(seq);
     StateValue<T> value  = new StateValue<>();
     Runnable emit = () -> {
       source.consume(t -> {
@@ -306,7 +306,7 @@ public interface Async {
     }
 
     @Override
-    public void joinAll(Seq<Runnable> tasks) {
+    public void joinAll(ZeroFlow<Runnable> tasks) {
 
       tasks.map(forkJoinPool::submit).cache().consume(ForkJoinTask::join);
     }

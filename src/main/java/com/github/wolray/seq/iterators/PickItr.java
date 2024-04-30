@@ -1,6 +1,6 @@
 package com.github.wolray.seq.iterators;
 
-import com.github.wolray.seq.Seq;
+import com.github.wolray.seq.ZeroFlow;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 
@@ -43,7 +43,7 @@ public abstract class PickItr<T> implements Iterator<T> {
       state = State.Unset;
       return res;
     } else {
-      return Seq.stop();
+      return ZeroFlow.stop();
     }
   }
 

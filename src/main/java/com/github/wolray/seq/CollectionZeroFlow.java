@@ -8,14 +8,14 @@ import java.util.Iterator;
  *
  * @author wolray
  */
-public interface CollectionSeq<T> extends SizedSeq<T>, Collection<T> {
+public interface CollectionZeroFlow<T> extends SizedZeroFlow<T>, Collection<T> {
 
-  static <T> CollectionSeq<T> of(Collection<T> ts) {
+  static <T> CollectionZeroFlow<T> of(Collection<T> ts) {
 
-    return ts instanceof CollectionSeq ? (CollectionSeq<T>) ts : new Proxy<>(ts);
+    return ts instanceof CollectionZeroFlow ? (CollectionZeroFlow<T>) ts : new Proxy<>(ts);
   }
 
-  class Proxy<T, C extends Collection<T>> implements CollectionSeq<T> {
+  class Proxy<T, C extends Collection<T>> implements CollectionZeroFlow<T> {
 
     public final C backer;
 

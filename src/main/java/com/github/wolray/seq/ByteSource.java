@@ -202,17 +202,17 @@ public interface ByteSource extends IOChain.Closable<InputStream> {
     return mapClosable(is -> new BufferedReader(new InputStreamReader(is, charset())));
   }
 
-  default Seq<String> toSeq() {
+  default ZeroFlow<String> toSeq() {
 
     return toReader().toSeq(BufferedReader::readLine);
   }
 
-  default Seq<String> toSeq(int n, UnaryOperator<String> replace) {
+  default ZeroFlow<String> toSeq(int n, UnaryOperator<String> replace) {
 
     return toReader().toSeq(BufferedReader::readLine, n, replace);
   }
 
-  default Seq<String> toSeq(int skip) {
+  default ZeroFlow<String> toSeq(int skip) {
 
     return toReader().toSeq(BufferedReader::readLine, skip);
   }

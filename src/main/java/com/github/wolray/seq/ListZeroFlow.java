@@ -9,14 +9,14 @@ import java.util.ListIterator;
  *
  * @author wolray
  */
-public interface ListSeq<T> extends SizedSeq<T>, List<T> {
+public interface ListZeroFlow<T> extends SizedZeroFlow<T>, List<T> {
 
-  static <T> ListSeq<T> of(List<T> list) {
+  static <T> ListZeroFlow<T> of(List<T> list) {
 
-    return list instanceof ListSeq ? (ListSeq<T>) list : new Proxy<>(list);
+    return list instanceof ListZeroFlow ? (ListZeroFlow<T>) list : new Proxy<>(list);
   }
 
-  class Proxy<T> extends CollectionSeq.Proxy<T, List<T>> implements ListSeq<T> {
+  class Proxy<T> extends CollectionZeroFlow.Proxy<T, List<T>> implements ListZeroFlow<T> {
 
     public Proxy(List<T> backer) {
 

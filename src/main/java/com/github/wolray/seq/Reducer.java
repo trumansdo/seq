@@ -134,7 +134,7 @@ public interface Reducer<T, V> {
     }, a -> a[0]);
   }
 
-  static <T> Reducer<T, ArrayListSeq<T>> filtering(Predicate<T> predicate) {
+  static <T> Reducer<T, ArrayListZeroFlow<T>> filtering(Predicate<T> predicate) {
 
     return filtering(predicate, toList());
   }
@@ -149,9 +149,9 @@ public interface Reducer<T, V> {
     }, reducer.finisher());
   }
 
-  static <T> Reducer<T, ArrayListSeq<T>> toList() {
+  static <T> Reducer<T, ArrayListZeroFlow<T>> toList() {
 
-    return of(ArrayListSeq::new, ArrayListSeq::add);
+    return of(ArrayListZeroFlow::new, ArrayListZeroFlow::add);
   }
 
   static <T, V, E> Transducer<T, V, E> filtering(Predicate<T> predicate, Transducer<T, V, E> transducer) {
@@ -159,18 +159,20 @@ public interface Reducer<T, V> {
     return Transducer.of(filtering(predicate, transducer.reducer()), transducer.transformer());
   }
 
-  static <T, K, V, E> Transducer<T, ?, MapSeq<K, E>> groupBy(Function<T, K> toKey, Transducer<T, V, E> transducer) {
+  static <T, K, V, E> Transducer<T, ?, MapZeroFlow<K, E>> groupBy(
+      Function<T, K> toKey, Transducer<T, V, E> transducer
+  ) {
 
     return Transducer.of(groupBy(toKey, transducer.reducer()), m -> m.replaceValue(transducer.transformer()));
   }
 
-  static <T, K, V> Reducer<T, MapSeq<K, V>> groupBy(Function<T, K> toKey, Reducer<T, V> reducer) {
+  static <T, K, V> Reducer<T, MapZeroFlow<K, V>> groupBy(Function<T, K> toKey, Reducer<T, V> reducer) {
 
     Supplier<V>      supplier    = reducer.supplier();
     BiConsumer<V, T> accumulator = reducer.accumulator();
     Consumer<V>      finisher    = reducer.finisher();
     return of(
-        MapSeq::hash,
+        MapZeroFlow::hash,
         (m, t) -> {
           // 对于将流中的原数据加入已有的map中的处理
           accumulator.accept(
@@ -188,7 +190,7 @@ public interface Reducer<T, V> {
     return Transducer.of(() -> new StringJoiner(sep), (j, t) -> j.add(function.apply(t)), StringJoiner::toString);
   }
 
-  static <T, E> Reducer<T, ArrayListSeq<E>> mapping(Function<T, E> mapper) {
+  static <T, E> Reducer<T, ArrayListZeroFlow<E>> mapping(Function<T, E> mapper) {
 
     return mapping(mapper, toList());
   }
@@ -333,7 +335,7 @@ public interface Reducer<T, V> {
     });
   }
 
-  static <T> Reducer<T, Pair<BatchedSeq<T>, BatchedSeq<T>>> partition(Predicate<T> predicate) {
+  static <T> Reducer<T, Pair<BatchedZeroFlow<T>, BatchedZeroFlow<T>>> partition(Predicate<T> predicate) {
 
     return partition(predicate, toBatched());
   }
@@ -353,9 +355,9 @@ public interface Reducer<T, V> {
     );
   }
 
-  static <T> Reducer<T, BatchedSeq<T>> toBatched() {
+  static <T> Reducer<T, BatchedZeroFlow<T>> toBatched() {
 
-    return of(BatchedSeq::new, BatchedSeq::add);
+    return of(BatchedZeroFlow::new, BatchedZeroFlow::add);
   }
 
   static <T, V, R> Transducer<T, ?, Pair<R, R>> partition(Predicate<T> predicate, Transducer<T, V, R> transducer) {
@@ -367,37 +369,37 @@ public interface Reducer<T, V> {
     );
   }
 
-  static <T> Reducer<T, ArrayListSeq<T>> reverse() {
+  static <T> Reducer<T, ArrayListZeroFlow<T>> reverse() {
 
     return Reducer.<T>toList().then(Collections::reverse);
   }
 
-  static <T> Reducer<T, ArrayListSeq<T>> sort() {
+  static <T> Reducer<T, ArrayListZeroFlow<T>> sort() {
 
     return sort((Comparator<T>) null);
   }
 
-  static <T> Reducer<T, ArrayListSeq<T>> sort(Comparator<T> comparator) {
+  static <T> Reducer<T, ArrayListZeroFlow<T>> sort(Comparator<T> comparator) {
 
     return Reducer.<T>toList().then(ts -> ts.sort(comparator));
   }
 
-  static <T, V extends Comparable<V>> Reducer<T, ArrayListSeq<T>> sort(Function<T, V> function) {
+  static <T, V extends Comparable<V>> Reducer<T, ArrayListZeroFlow<T>> sort(Function<T, V> function) {
 
     return sort(Comparator.comparing(function));
   }
 
-  static <T> Reducer<T, ArrayListSeq<T>> sortDesc() {
+  static <T> Reducer<T, ArrayListZeroFlow<T>> sortDesc() {
 
     return sort(Collections.reverseOrder());
   }
 
-  static <T> Reducer<T, ArrayListSeq<T>> sortDesc(Comparator<T> comparator) {
+  static <T> Reducer<T, ArrayListZeroFlow<T>> sortDesc(Comparator<T> comparator) {
 
     return sort(comparator.reversed());
   }
 
-  static <T, V extends Comparable<V>> Reducer<T, ArrayListSeq<T>> sortDesc(Function<T, V> function) {
+  static <T, V extends Comparable<V>> Reducer<T, ArrayListZeroFlow<T>> sortDesc(Function<T, V> function) {
 
     return sort(Comparator.comparing(function).reversed());
   }
@@ -417,61 +419,61 @@ public interface Reducer<T, V> {
     return Transducer.of(() -> new long[1], (a, t) -> a[0] += function.applyAsLong(t), a -> a[0]);
   }
 
-  static <T> Reducer<T, ConcurrentQueueSeq<T>> toConcurrentQueue() {
+  static <T> Reducer<T, ConcurrentQueueZeroFlow<T>> toConcurrentQueue() {
 
-    return of(ConcurrentQueueSeq::new, ConcurrentQueueSeq::add);
+    return of(ConcurrentQueueZeroFlow::new, ConcurrentQueueZeroFlow::add);
   }
 
-  static <T> Reducer<T, LinkedListSeq<T>> toLinkedList() {
+  static <T> Reducer<T, LinkedListZeroFlow<T>> toLinkedList() {
 
-    return of(LinkedListSeq::new, LinkedListSeq::add);
+    return of(LinkedListZeroFlow::new, LinkedListZeroFlow::add);
   }
 
-  static <T> Reducer<T, ArrayListSeq<T>> toList(int initialCapacity) {
+  static <T> Reducer<T, ArrayListZeroFlow<T>> toList(int initialCapacity) {
 
-    return of(() -> new ArrayListSeq<>(initialCapacity), ArrayListSeq::add);
+    return of(() -> new ArrayListZeroFlow<>(initialCapacity), ArrayListZeroFlow::add);
   }
 
-  static <T, K, V> Reducer<T, MapSeq<K, V>> toMap(Function<T, K> toKey, Function<T, V> toValue) {
+  static <T, K, V> Reducer<T, MapZeroFlow<K, V>> toMap(Function<T, K> toKey, Function<T, V> toValue) {
 
-    return of(MapSeq::hash, (m, t) -> m.put(toKey.apply(t), toValue.apply(t)));
+    return of(MapZeroFlow::hash, (m, t) -> m.put(toKey.apply(t), toValue.apply(t)));
   }
 
-  static <T, K, V> Reducer<T, MapSeq<K, V>> toMap(
+  static <T, K, V> Reducer<T, MapZeroFlow<K, V>> toMap(
       Supplier<Map<K, V>> mapSupplier, Function<T, K> toKey, Function<T, V> toValue
   ) {
 
-    return of(() -> MapSeq.of(mapSupplier.get()), (m, t) -> m.put(toKey.apply(t), toValue.apply(t)));
+    return of(() -> MapZeroFlow.of(mapSupplier.get()), (m, t) -> m.put(toKey.apply(t), toValue.apply(t)));
   }
 
-  static <T, K> Reducer<T, MapSeq<K, T>> toMapBy(Function<T, K> toKey) {
+  static <T, K> Reducer<T, MapZeroFlow<K, T>> toMapBy(Function<T, K> toKey) {
 
     return toMapBy(LinkedHashMap::new, toKey);
   }
 
-  static <T, K> Reducer<T, MapSeq<K, T>> toMapBy(Supplier<Map<K, T>> mapSupplier, Function<T, K> toKey) {
+  static <T, K> Reducer<T, MapZeroFlow<K, T>> toMapBy(Supplier<Map<K, T>> mapSupplier, Function<T, K> toKey) {
 
-    return of(() -> MapSeq.of(mapSupplier.get()), (m, t) -> m.put(toKey.apply(t), t));
+    return of(() -> MapZeroFlow.of(mapSupplier.get()), (m, t) -> m.put(toKey.apply(t), t));
   }
 
-  static <T, V> Reducer<T, MapSeq<T, V>> toMapWith(Function<T, V> toValue) {
+  static <T, V> Reducer<T, MapZeroFlow<T, V>> toMapWith(Function<T, V> toValue) {
 
     return toMapWith(LinkedHashMap::new, toValue);
   }
 
-  static <T, V> Reducer<T, MapSeq<T, V>> toMapWith(Supplier<Map<T, V>> mapSupplier, Function<T, V> toValue) {
+  static <T, V> Reducer<T, MapZeroFlow<T, V>> toMapWith(Supplier<Map<T, V>> mapSupplier, Function<T, V> toValue) {
 
-    return of(() -> MapSeq.of(mapSupplier.get()), (m, t) -> m.put(t, toValue.apply(t)));
+    return of(() -> MapZeroFlow.of(mapSupplier.get()), (m, t) -> m.put(t, toValue.apply(t)));
   }
 
-  static <T> Reducer<T, SetSeq<T>> toSet() {
+  static <T> Reducer<T, SetZeroFlow<T>> toSet() {
 
-    return of(LinkedHashSetSeq::new, Set::add);
+    return of(LinkedHashSetZeroFlow::new, Set::add);
   }
 
-  static <T> Reducer<T, SetSeq<T>> toSet(int initialCapacity) {
+  static <T> Reducer<T, SetZeroFlow<T>> toSet(int initialCapacity) {
 
-    return of(() -> new LinkedHashSetSeq<>(initialCapacity), Set::add);
+    return of(() -> new LinkedHashSetZeroFlow<>(initialCapacity), Set::add);
   }
 
   /**

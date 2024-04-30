@@ -2,10 +2,11 @@ package com.github.wolray.seq.pair;
 
 import static com.github.wolray.seq.Splitter.substring;
 
-import com.github.wolray.seq.BaseSeq;
-import com.github.wolray.seq.MapSeq;
+import com.github.wolray.seq.BaseZeroFlow;
+import com.github.wolray.seq.ItrZeroFlow;
+import com.github.wolray.seq.MapZeroFlow;
 import com.github.wolray.seq.Mutable;
-import com.github.wolray.seq.Seq;
+import com.github.wolray.seq.ZeroFlow;
 import com.github.wolray.seq.triple.TripleConsumer;
 import com.github.wolray.seq.triple.TripleFunction;
 import java.util.Comparator;
@@ -22,12 +23,12 @@ import java.util.function.Predicate;
  *
  * @author wolray
  */
-public interface PairSeq<K, V> extends BaseSeq<BiConsumer<K, V>> {
+public interface PairZeroFlow<K, V> extends BaseZeroFlow<BiConsumer<K, V>> {
 
   @SuppressWarnings("unchecked")
-  static <K, V> PairSeq<K, V> empty() {
+  static <K, V> PairZeroFlow<K, V> empty() {
 
-    return (PairSeq<K, V>) Empty.emptySeq;
+    return (PairZeroFlow<K, V>) Empty.emptySeq;
   }
 
   @SuppressWarnings("unchecked")
@@ -36,15 +37,15 @@ public interface PairSeq<K, V> extends BaseSeq<BiConsumer<K, V>> {
     return (BiConsumer<K, V>) Empty.nothing;
   }
 
-  static <K, V> PairSeq<K, V> of(Map<K, V> map) {
+  static <K, V> PairZeroFlow<K, V> of(Map<K, V> map) {
 
-    return map instanceof MapSeq ? (MapSeq<K, V>) map : map::forEach;
+    return map instanceof MapZeroFlow ? (MapZeroFlow<K, V>) map : map::forEach;
   }
 
   /**
    * @see #parseMap(char[], char, char)
    */
-  static PairSeq<String, String> parseMap(String s, char entrySep, char kvSep) {
+  static PairZeroFlow<String, String> parseMap(String s, char entrySep, char kvSep) {
 
     return parseMap(s.toCharArray(), entrySep, kvSep);
   }
@@ -59,9 +60,9 @@ public interface PairSeq<K, V> extends BaseSeq<BiConsumer<K, V>> {
    * @param kvSep
    *     键值的分隔符
    *
-   * @return {@link PairSeq }<{@link String }, {@link String }>
+   * @return {@link PairZeroFlow }<{@link String }, {@link String }>
    */
-  static PairSeq<String, String> parseMap(char[] chars, char entrySep, char kvSep) {
+  static PairZeroFlow<String, String> parseMap(char[] chars, char entrySep, char kvSep) {
 
     return c -> {
       int    len  = chars.length, last = 0;
@@ -84,33 +85,33 @@ public interface PairSeq<K, V> extends BaseSeq<BiConsumer<K, V>> {
     };
   }
 
-  static <K, V> PairSeq<K, V> unit(K k, V v) {
+  static <K, V> PairZeroFlow<K, V> unit(K k, V v) {
 
     return c -> c.accept(k, v);
   }
 
-  default PairSeq<K, V> cache() {
+  default PairZeroFlow<K, V> cache() {
 
-    Seq<Pair<K, V>> pairSeq = paired().cache();
+    ZeroFlow<Pair<K, V>> pairSeq = paired().cache();
     return c -> pairSeq.consume(p -> c.accept(p.first, p.second));
   }
 
   /**
    * 将key和value用{@link Pair}存放
    *
-   * @return {@link Seq }<{@link Pair }<{@link K }, {@link V }>>
+   * @return {@link ZeroFlow }<{@link Pair }<{@link K }, {@link V }>>
    */
-  default Seq<Pair<K, V>> paired() {
+  default ZeroFlow<Pair<K, V>> paired() {
 
     return map(Pair::new);
   }
 
-  default <T> Seq<T> map(BiFunction<K, V, T> function) {
+  default <T> ZeroFlow<T> map(BiFunction<K, V, T> function) {
 
     return c -> consume((k, v) -> c.accept(function.apply(k, v)));
   }
 
-  default PairSeq<K, V> filter(BiPredicate<K, V> predicate) {
+  default PairZeroFlow<K, V> filter(BiPredicate<K, V> predicate) {
 
     return c -> consume((k, v) -> {
       if (predicate.test(k, v)) {
@@ -119,7 +120,7 @@ public interface PairSeq<K, V> extends BaseSeq<BiConsumer<K, V>> {
     });
   }
 
-  default PairSeq<K, V> filterByKey(Predicate<K> predicate) {
+  default PairZeroFlow<K, V> filterByKey(Predicate<K> predicate) {
 
     return c -> consume((k, v) -> {
       if (predicate.test(k)) {
@@ -128,7 +129,7 @@ public interface PairSeq<K, V> extends BaseSeq<BiConsumer<K, V>> {
     });
   }
 
-  default PairSeq<K, V> filterByValue(Predicate<V> predicate) {
+  default PairZeroFlow<K, V> filterByValue(Predicate<V> predicate) {
 
     return c -> consume((k, v) -> {
       if (predicate.test(v)) {
@@ -138,7 +139,7 @@ public interface PairSeq<K, V> extends BaseSeq<BiConsumer<K, V>> {
   }
 
   /**
-   * 折叠，如{@link com.github.wolray.seq.ItrSeq#fold(Object, BiFunction)}
+   * 折叠，如{@link ItrZeroFlow#fold(Object, BiFunction)}
    *
    * @return {@link E }
    */
@@ -152,9 +153,9 @@ public interface PairSeq<K, V> extends BaseSeq<BiConsumer<K, V>> {
   /**
    * 返回key的流
    *
-   * @return {@link Seq }<{@link K }>
+   * @return {@link ZeroFlow }<{@link K }>
    */
-  default Seq<K> justKeys() {
+  default ZeroFlow<K> justKeys() {
 
     return c -> consume((k, v) -> c.accept(k));
   }
@@ -162,29 +163,29 @@ public interface PairSeq<K, V> extends BaseSeq<BiConsumer<K, V>> {
   /**
    * 返回value的流
    *
-   * @return {@link Seq }<{@link V }>
+   * @return {@link ZeroFlow }<{@link V }>
    */
-  default Seq<V> justValues() {
+  default ZeroFlow<V> justValues() {
 
     return c -> consume((k, v) -> c.accept(v));
   }
 
-  default <T> PairSeq<T, V> mapKey(BiFunction<K, V, T> function) {
+  default <T> PairZeroFlow<T, V> mapKey(BiFunction<K, V, T> function) {
 
     return c -> consume((k, v) -> c.accept(function.apply(k, v), v));
   }
 
-  default <T> PairSeq<T, V> mapKey(Function<K, T> function) {
+  default <T> PairZeroFlow<T, V> mapKey(Function<K, T> function) {
 
     return c -> consume((k, v) -> c.accept(function.apply(k), v));
   }
 
-  default <T> PairSeq<K, T> mapValue(BiFunction<K, V, T> function) {
+  default <T> PairZeroFlow<K, T> mapValue(BiFunction<K, V, T> function) {
 
     return c -> consume((k, v) -> c.accept(k, function.apply(k, v)));
   }
 
-  default <T> PairSeq<K, T> mapValue(Function<V, T> function) {
+  default <T> PairZeroFlow<K, T> mapValue(Function<V, T> function) {
 
     return c -> consume((k, v) -> c.accept(k, function.apply(v)));
   }
@@ -231,7 +232,7 @@ public interface PairSeq<K, V> extends BaseSeq<BiConsumer<K, V>> {
     });
   }
 
-  default PairSeq<K, V> onEach(BiConsumer<K, V> consumer) {
+  default PairZeroFlow<K, V> onEach(BiConsumer<K, V> consumer) {
 
     return c -> consumeTillStop(consumer.andThen(c));
   }
@@ -239,36 +240,36 @@ public interface PairSeq<K, V> extends BaseSeq<BiConsumer<K, V>> {
   /**
    * 交换key和value
    *
-   * @return {@link PairSeq }<{@link V }, {@link K }>
+   * @return {@link PairZeroFlow }<{@link V }, {@link K }>
    */
-  default PairSeq<V, K> swap() {
+  default PairZeroFlow<V, K> swap() {
 
     return c -> consume((k, v) -> c.accept(v, k));
   }
 
-  default MapSeq<K, V> toMap() {
+  default MapZeroFlow<K, V> toMap() {
 
     return toMap(new LinkedHashMap<>());
   }
 
-  default MapSeq<K, V> toMap(Map<K, V> des) {
+  default MapZeroFlow<K, V> toMap(Map<K, V> des) {
 
-    return MapSeq.of(reduce(des, Map::put));
+    return MapZeroFlow.of(reduce(des, Map::put));
   }
 
-  default <A, B> MapSeq<A, B> toMap(BiFunction<K, V, A> toKey, BiFunction<K, V, B> toValue) {
+  default <A, B> MapZeroFlow<A, B> toMap(BiFunction<K, V, A> toKey, BiFunction<K, V, B> toValue) {
 
     return toMap(new LinkedHashMap<>(), toKey, toValue);
   }
 
-  default <A, B> MapSeq<A, B> toMap(Map<A, B> des, BiFunction<K, V, A> toKey, BiFunction<K, V, B> toValue) {
+  default <A, B> MapZeroFlow<A, B> toMap(Map<A, B> des, BiFunction<K, V, A> toKey, BiFunction<K, V, B> toValue) {
 
-    return MapSeq.of(reduce(des, (res, k, v) -> res.put(toKey.apply(k, v), toValue.apply(k, v))));
+    return MapZeroFlow.of(reduce(des, (res, k, v) -> res.put(toKey.apply(k, v), toValue.apply(k, v))));
   }
 
   class Empty {
 
-    static final PairSeq<Object, Object> emptySeq = c -> {
+    static final PairZeroFlow<Object, Object> emptySeq = c -> {
     };
 
     static final BiConsumer<Object, Object> nothing = (k, v) -> {

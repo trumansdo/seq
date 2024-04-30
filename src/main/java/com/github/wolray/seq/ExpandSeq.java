@@ -10,9 +10,9 @@ import java.util.function.Predicate;
 /**
  * @author wolray
  */
-public interface ExpandSeq<T> extends Function<T, Seq<T>> {
+public interface ExpandSeq<T> extends Function<T, ZeroFlow<T>> {
 
-  static <T> ExpandSeq<T> of(Function<T, Seq<T>> function) {
+  static <T> ExpandSeq<T> of(Function<T, ZeroFlow<T>> function) {
 
     return function instanceof ExpandSeq ? (ExpandSeq<T>) function : function::apply;
   }
@@ -27,9 +27,9 @@ public interface ExpandSeq<T> extends Function<T, Seq<T>> {
     return t -> apply(t).filter(predicate.negate());
   }
 
-  default void scan(BiConsumer<T, ArrayListSeq<T>> c, T node) {
+  default void scan(BiConsumer<T, ArrayListZeroFlow<T>> c, T node) {
 
-    ArrayListSeq<T> sub = apply(node).filterNotNull().toList();
+    ArrayListZeroFlow<T> sub = apply(node).filterNotNull().toList();
     c.accept(node, sub);
     sub.consume(n -> scan(c, n));
   }
@@ -58,30 +58,30 @@ public interface ExpandSeq<T> extends Function<T, Seq<T>> {
 
   default ExpandSeq<T> terminate(Predicate<T> predicate) {
 
-    return t -> predicate.test(t) ? Seq.empty() : apply(t);
+    return t -> predicate.test(t) ? ZeroFlow.empty() : apply(t);
   }
 
-  default Map<T, ArrayListSeq<T>> toDAG(Seq<T> nodes) {
+  default Map<T, ArrayListZeroFlow<T>> toDAG(ZeroFlow<T> nodes) {
 
-    Map<T, ArrayListSeq<T>> map    = new HashMap<>();
-    ExpandSeq<T>            expand = terminate(t -> !map.containsKey(t));
+    Map<T, ArrayListZeroFlow<T>> map    = new HashMap<>();
+    ExpandSeq<T>                 expand = terminate(t -> !map.containsKey(t));
     nodes.consume(t -> expand.scan(map::put, t));
     return map;
   }
 
-  default Map<T, ArrayListSeq<T>> toDAG(T node) {
+  default Map<T, ArrayListZeroFlow<T>> toDAG(T node) {
 
-    Map<T, ArrayListSeq<T>> map = new HashMap<>();
+    Map<T, ArrayListZeroFlow<T>> map = new HashMap<>();
     terminate(t -> !map.containsKey(t)).scan(map::put, node);
     return map;
   }
 
-  default Seq<T> toSeq(T node) {
+  default ZeroFlow<T> toSeq(T node) {
 
     return c -> scan(c, node);
   }
 
-  default Seq<T> toSeq(T node, int maxDepth) {
+  default ZeroFlow<T> toSeq(T node, int maxDepth) {
 
     return c -> scan(c, node, maxDepth, 0);
   }

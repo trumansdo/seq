@@ -16,15 +16,15 @@ import java.util.function.IntUnaryOperator;
 /**
  * @author wolray
  */
-public interface IntSeq extends BaseSeq<IntConsumer> {
+public interface IntZeroFlow extends BaseZeroFlow<IntConsumer> {
 
-  IntSeq empty = c -> {
+  IntZeroFlow empty = c -> {
   };
 
   IntConsumer nothing = t -> {
   };
 
-  static IntSeq gen(int seed, IntUnaryOperator operator) {
+  static IntZeroFlow gen(int seed, IntUnaryOperator operator) {
 
     return c -> {
       int t = seed;
@@ -35,7 +35,7 @@ public interface IntSeq extends BaseSeq<IntConsumer> {
     };
   }
 
-  static IntSeq gen(int seed1, int seed2, IntBinaryOperator operator) {
+  static IntZeroFlow gen(int seed1, int seed2, IntBinaryOperator operator) {
 
     return c -> {
       int t1 = seed1, t2 = seed2;
@@ -47,7 +47,7 @@ public interface IntSeq extends BaseSeq<IntConsumer> {
     };
   }
 
-  static IntSeq gen(IntSupplier supplier) {
+  static IntZeroFlow gen(IntSupplier supplier) {
 
     return c -> {
       while (true) {
@@ -56,7 +56,7 @@ public interface IntSeq extends BaseSeq<IntConsumer> {
     };
   }
 
-  static IntSeq of(CharSequence cs) {
+  static IntZeroFlow of(CharSequence cs) {
 
     return c -> {
       for (int i = 0; i < cs.length(); i++) {
@@ -65,7 +65,7 @@ public interface IntSeq extends BaseSeq<IntConsumer> {
     };
   }
 
-  static IntSeq of(int... ts) {
+  static IntZeroFlow of(int... ts) {
 
     return c -> {
       for (int t : ts) {
@@ -74,12 +74,12 @@ public interface IntSeq extends BaseSeq<IntConsumer> {
     };
   }
 
-  static IntSeq range(int start, int stop) {
+  static IntZeroFlow range(int start, int stop) {
 
     return range(start, stop, 1);
   }
 
-  static IntSeq range(int start, int stop, int step) {
+  static IntZeroFlow range(int start, int stop, int step) {
 
     if (step == 0) {
       throw new IllegalArgumentException("step is 0");
@@ -97,12 +97,12 @@ public interface IntSeq extends BaseSeq<IntConsumer> {
     };
   }
 
-  static IntSeq range(int stop) {
+  static IntZeroFlow range(int stop) {
 
     return range(0, stop, 1);
   }
 
-  static IntSeq repeat(int n, int value) {
+  static IntZeroFlow repeat(int n, int value) {
 
     return c -> {
       for (int i = 0; i < n; i++) {
@@ -122,7 +122,7 @@ public interface IntSeq extends BaseSeq<IntConsumer> {
     consumeTillStop(t -> {
       if (predicate.test(t)) {
         m.set(t);
-        Seq.stop();
+        ZeroFlow.stop();
       }
     });
     return m.isSet ? OptionalInt.of(m.it) : OptionalInt.empty();
@@ -138,7 +138,7 @@ public interface IntSeq extends BaseSeq<IntConsumer> {
     return find(predicate).isPresent();
   }
 
-  default IntSeq append(int t) {
+  default IntZeroFlow append(int t) {
 
     return c -> {
       consume(c);
@@ -146,7 +146,7 @@ public interface IntSeq extends BaseSeq<IntConsumer> {
     };
   }
 
-  default IntSeq append(int... t) {
+  default IntZeroFlow append(int... t) {
 
     return c -> {
       consume(c);
@@ -156,7 +156,7 @@ public interface IntSeq extends BaseSeq<IntConsumer> {
     };
   }
 
-  default IntSeq appendWith(IntSeq seq) {
+  default IntZeroFlow appendWith(IntZeroFlow seq) {
 
     return c -> {
       consume(c);
@@ -185,12 +185,12 @@ public interface IntSeq extends BaseSeq<IntConsumer> {
     return a[1] != 0 ? a[0] / a[1] : 0;
   }
 
-  default Seq<Integer> boxed() {
+  default ZeroFlow<Integer> boxed() {
 
     return c -> consume(c::accept);
   }
 
-  default IntSeq circle() {
+  default IntZeroFlow circle() {
 
     return c -> {
       while (true) {
@@ -230,12 +230,12 @@ public interface IntSeq extends BaseSeq<IntConsumer> {
     })[0];
   }
 
-  default IntSeq distinct() {
+  default IntZeroFlow distinct() {
 
     return distinctBy(i -> i);
   }
 
-  default <E> IntSeq distinctBy(IntFunction<E> function) {
+  default <E> IntZeroFlow distinctBy(IntFunction<E> function) {
 
     return c -> reduce(new HashSet<>(), (set, t) -> {
       if (set.add(function.apply(t))) {
@@ -244,12 +244,12 @@ public interface IntSeq extends BaseSeq<IntConsumer> {
     });
   }
 
-  default IntSeq drop(int n) {
+  default IntZeroFlow drop(int n) {
 
     return n <= 0 ? this : partial(n, nothing);
   }
 
-  default IntSeq partial(int n, IntConsumer substitute) {
+  default IntZeroFlow partial(int n, IntConsumer substitute) {
 
     return c -> consume(c, n, substitute);
   }
@@ -271,7 +271,7 @@ public interface IntSeq extends BaseSeq<IntConsumer> {
     }
   }
 
-  default IntSeq dropWhile(IntPredicate predicate) {
+  default IntZeroFlow dropWhile(IntPredicate predicate) {
 
     return c -> foldBoolean(false, (b, t) -> {
       if (b || !predicate.test(t)) {
@@ -289,7 +289,7 @@ public interface IntSeq extends BaseSeq<IntConsumer> {
     return a[0];
   }
 
-  default IntSeq duplicateAll(int times) {
+  default IntZeroFlow duplicateAll(int times) {
 
     return c -> {
       for (int i = 0; i < times; i++) {
@@ -298,7 +298,7 @@ public interface IntSeq extends BaseSeq<IntConsumer> {
     };
   }
 
-  default IntSeq duplicateEach(int times) {
+  default IntZeroFlow duplicateEach(int times) {
 
     return c -> consume(t -> {
       for (int i = 0; i < times; i++) {
@@ -307,7 +307,7 @@ public interface IntSeq extends BaseSeq<IntConsumer> {
     });
   }
 
-  default IntSeq duplicateIf(int times, IntPredicate predicate) {
+  default IntZeroFlow duplicateIf(int times, IntPredicate predicate) {
 
     return c -> consume(t -> {
       if (predicate.test(t)) {
@@ -320,7 +320,7 @@ public interface IntSeq extends BaseSeq<IntConsumer> {
     });
   }
 
-  default IntSeq filter(int n, IntPredicate predicate) {
+  default IntZeroFlow filter(int n, IntPredicate predicate) {
 
     return c -> consume(c, n, t -> {
       if (predicate.test(t)) {
@@ -329,7 +329,7 @@ public interface IntSeq extends BaseSeq<IntConsumer> {
     });
   }
 
-  default IntSeq filterIndexed(IndexIntPredicate predicate) {
+  default IntZeroFlow filterIndexed(IndexIntPredicate predicate) {
 
     return c -> consumeIndexed((i, t) -> {
       if (predicate.test(i, t)) {
@@ -344,12 +344,12 @@ public interface IntSeq extends BaseSeq<IntConsumer> {
     consume(t -> consumer.accept(a[0]++, t));
   }
 
-  default IntSeq filterNot(IntPredicate predicate) {
+  default IntZeroFlow filterNot(IntPredicate predicate) {
 
     return filter(predicate.negate());
   }
 
-  default IntSeq filter(IntPredicate predicate) {
+  default IntZeroFlow filter(IntPredicate predicate) {
 
     return c -> consume(t -> {
       if (predicate.test(t)) {
@@ -368,7 +368,7 @@ public interface IntSeq extends BaseSeq<IntConsumer> {
     return find(t -> true);
   }
 
-  default IntSeq flatMap(IntFunction<IntSeq> function) {
+  default IntZeroFlow flatMap(IntFunction<IntZeroFlow> function) {
 
     return c -> consume(t -> function.apply(t).consume(c));
   }
@@ -404,17 +404,17 @@ public interface IntSeq extends BaseSeq<IntConsumer> {
     return m.isSet ? OptionalInt.of(m.it) : OptionalInt.empty();
   }
 
-  default IntSeq map(IntUnaryOperator function) {
+  default IntZeroFlow map(IntUnaryOperator function) {
 
     return c -> consume(t -> c.accept(function.applyAsInt(t)));
   }
 
-  default IntSeq mapIndexed(IndexIntToInt function) {
+  default IntZeroFlow mapIndexed(IndexIntToInt function) {
 
     return c -> consumeIndexed((i, t) -> c.accept(function.apply(i, t)));
   }
 
-  default <E> Seq<E> mapToObj(IntFunction<E> function, int n, IntFunction<E> substitute) {
+  default <E> ZeroFlow<E> mapToObj(IntFunction<E> function, int n, IntFunction<E> substitute) {
 
     return n <= 0 ? mapToObj(function) : c -> {
       int[] a = {n - 1};
@@ -429,7 +429,7 @@ public interface IntSeq extends BaseSeq<IntConsumer> {
     };
   }
 
-  default <E> Seq<E> mapToObj(IntFunction<E> function) {
+  default <E> ZeroFlow<E> mapToObj(IntFunction<E> function) {
 
     return c -> consume(t -> c.accept(function.apply(t)));
   }
@@ -478,17 +478,17 @@ public interface IntSeq extends BaseSeq<IntConsumer> {
     return !find(predicate).isPresent();
   }
 
-  default IntSeq onEach(int n, IntConsumer consumer) {
+  default IntZeroFlow onEach(int n, IntConsumer consumer) {
 
     return c -> consume(c, n, consumer.andThen(c));
   }
 
-  default IntSeq onEach(IntConsumer consumer) {
+  default IntZeroFlow onEach(IntConsumer consumer) {
 
     return c -> consume(consumer.andThen(c));
   }
 
-  default IntSeq onEachIndexed(IndexIntConsumer consumer) {
+  default IntZeroFlow onEachIndexed(IndexIntConsumer consumer) {
 
     return c -> consumeIndexed((i, t) -> {
       consumer.accept(i, t);
@@ -496,17 +496,17 @@ public interface IntSeq extends BaseSeq<IntConsumer> {
     });
   }
 
-  default IntSeq replace(int n, IntUnaryOperator operator) {
+  default IntZeroFlow replace(int n, IntUnaryOperator operator) {
 
     return c -> consume(c, n, t -> c.accept(operator.applyAsInt(t)));
   }
 
   /**
-   * @return {@link IntSeq }
+   * @return {@link IntZeroFlow }
    *
-   * @see ItrSeq#fold(Object, BiFunction)
+   * @see ItrZeroFlow#fold(Object, BiFunction)
    */
-  default IntSeq runningFold(int init, IntBinaryOperator function) {
+  default IntZeroFlow runningFold(int init, IntBinaryOperator function) {
 
     return c -> foldInt(init, (acc, t) -> {
       acc = function.applyAsInt(acc, t);
@@ -532,7 +532,7 @@ public interface IntSeq extends BaseSeq<IntConsumer> {
     return reduce(new int[1], (a, t) -> a[0] += function.applyAsInt(t))[0];
   }
 
-  default IntSeq take(int n) {
+  default IntZeroFlow take(int n) {
 
     return n <= 0 ? empty : c -> {
       int[] i = {n};
@@ -540,19 +540,19 @@ public interface IntSeq extends BaseSeq<IntConsumer> {
         if (i[0]-- > 0) {
           c.accept(t);
         } else {
-          Seq.stop();
+          ZeroFlow.stop();
         }
       });
     };
   }
 
-  default IntSeq takeWhile(IntPredicate predicate) {
+  default IntZeroFlow takeWhile(IntPredicate predicate) {
 
     return c -> consumeTillStop(t -> {
       if (predicate.test(t)) {
         c.accept(t);
       } else {
-        Seq.stop();
+        ZeroFlow.stop();
       }
     });
   }
@@ -615,7 +615,7 @@ public interface IntSeq extends BaseSeq<IntConsumer> {
 
   }
 
-  class Batched implements IntSeq {
+  class Batched implements IntZeroFlow {
 
     private final LinkedList<int[]> list = new LinkedList<>();
 
