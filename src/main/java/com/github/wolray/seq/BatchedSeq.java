@@ -7,11 +7,18 @@ import java.util.LinkedList;
 import java.util.function.Consumer;
 
 /**
+ * ��һ����ά���鰴�д������
+ *
  * @author wolray
  */
 public class BatchedSeq<T> implements SizedSeq<T> {
+
+  private transient final LinkedList<ArrayList<T>> list = new LinkedList<>();
+
+  /**
+   * �����е������������300
+   */
     private transient int batchSize = 10;
-    private transient final LinkedList<ArrayList<T>> list = new LinkedList<>();
     private transient int size;
     private transient ArrayList<T> cur;
 
@@ -23,7 +30,8 @@ public class BatchedSeq<T> implements SizedSeq<T> {
     @Override
     public Iterator<T> iterator() {
         return new Iterator<T>() {
-            Iterator<ArrayList<T>> iterator = list.iterator();
+
+          final Iterator<ArrayList<T>> iterator = list.iterator();
             Iterator<T> cur = Collections.emptyIterator();
 
             @Override
@@ -44,17 +52,21 @@ public class BatchedSeq<T> implements SizedSeq<T> {
         };
     }
 
-    @Override
+  @Override
+  public boolean isEmpty() {
+
+    return size == 0;
+  }
+
+  @Override
     public int size() {
         return size;
     }
 
-    @Override
-    public boolean isEmpty() {
-        return size == 0;
-    }
-
-    public void add(T t) {
+  /**
+   * �Զ�ά���ݽ����������
+   */
+  public void add(T t) {
         if (cur == null) {
             cur = new ArrayList<>(batchSize);
             list.add(cur);
@@ -63,7 +75,8 @@ public class BatchedSeq<T> implements SizedSeq<T> {
         size++;
         if (cur.size() == batchSize) {
             cur = null;
-            batchSize = Math.min(300, Math.max(batchSize, size >> 1));
+          //�����е������������300��ÿ��������������
+          batchSize = Math.min(300, Math.max(batchSize, size >> 1));
         }
     }
 

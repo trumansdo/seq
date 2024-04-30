@@ -2,7 +2,12 @@ package com.github.wolray.seq;
 
 import java.util.ArrayList;
 import java.util.Objects;
-import java.util.concurrent.*;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.ForkJoinPool;
+import java.util.concurrent.ForkJoinTask;
+import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 
@@ -10,23 +15,18 @@ import java.util.function.Consumer;
  * @author wolray
  */
 public interface Async {
-    Object submit(Runnable runnable);
-
     void join(Object task);
 
     void joinAll(Seq<Runnable> tasks);
 
-    static void apply(ThreadRunnable runnable) {
-        try {
-            runnable.run();
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
     static Async common() {
         return of(ForkJoinPool.commonPool());
     }
+
+  static Async of(ForkJoinPool forkJoinPool) {
+
+    return new ForkJoin(forkJoinPool);
+  }
 
     static void delay(long time) {
         try {
@@ -37,7 +37,8 @@ public interface Async {
     }
 
     static Async of(ExecutorService executor) {
-        return executor instanceof ForkJoinPool ? of((ForkJoinPool)executor) : new Async() {
+
+      return executor instanceof ForkJoinPool ? of((ForkJoinPool) executor) : new Async() {
             @Override
             public Object submit(Runnable runnable) {
                 return CompletableFuture.runAsync(runnable, executor);
@@ -45,7 +46,8 @@ public interface Async {
 
             @Override
             public void join(Object task) {
-                ((CompletableFuture<?>)task).join();
+
+              ((CompletableFuture<?>) task).join();
             }
 
             @Override
@@ -56,10 +58,6 @@ public interface Async {
                 CompletableFuture.allOf(futures).join();
             }
         };
-    }
-
-    static Async of(ForkJoinPool forkJoinPool) {
-        return new ForkJoin(forkJoinPool);
     }
 
     static Async of(ThreadFactory factory) {
@@ -73,12 +71,14 @@ public interface Async {
 
             @Override
             public void join(Object task) {
-                apply(((Thread)task)::join);
+
+              apply(((Thread) task)::join);
             }
 
             @Override
             public void joinAll(Seq<Runnable> tasks) {
-                ArraySeq<Runnable> list = tasks.toList();
+
+              ArrayListSeq<Runnable> list = tasks.toList();
                 CountDownLatch latch = new CountDownLatch(list.size());
                 list.consume(r -> factory.newThread(() -> {
                     r.run();
@@ -89,8 +89,13 @@ public interface Async {
         };
     }
 
-    static <T> Seq<T> sourceOf(Seq<T> seq) {
-        return seq instanceof AsyncSeq ? ((AsyncSeq<T>)seq).source : seq;
+  static void apply(ThreadRunnable runnable) {
+
+    try {
+      runnable.run();
+    } catch (InterruptedException e) {
+      throw new RuntimeException(e);
+    }
     }
 
     default <T> AsyncSeq<T> toAsync(Seq<T> seq) {
@@ -107,6 +112,13 @@ public interface Async {
             }
         };
     }
+
+  static <T> Seq<T> sourceOf(Seq<T> seq) {
+
+    return seq instanceof AsyncSeq ? ((AsyncSeq<T>) seq).source : seq;
+  }
+
+  Object submit(Runnable runnable);
 
     default <T> AsyncSeq<T> toChannel(Seq<T> seq) {
         return new AsyncSeq<T>(this, sourceOf(seq)) {
@@ -183,7 +195,7 @@ public interface Async {
                         if (i - array.drop >= array.size()) {
                             array.easyWait();
                         }
-                        c.accept(array.get((int)((array.head + i - array.drop) % buffer)));
+                      c.accept(array.get((int) ((array.head + i - array.drop) % buffer)));
                     }
                 }
             });
@@ -262,7 +274,8 @@ public interface Async {
 
         @Override
         public void join(Object task) {
-            ((ForkJoinTask<?>)task).join();
+
+          ((ForkJoinTask<?>) task).join();
         }
 
         @Override

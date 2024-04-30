@@ -1,19 +1,20 @@
 package com.github.wolray.seq.pair;
 
 /**
+ * ��{@link Integer}Ϊleft��{@link T}Ϊright��Pair
+ *
  * @author wolray
  */
-public class IntPair<T> {
-    public int intVal;
-    public T it;
+public class IntPair<T> extends Pair<Integer, T> {
 
-    public IntPair(int intVal, T it) {
-        this.intVal = intVal;
-        this.it = it;
+  public IntPair(int first, T second) {
+
+    super(first, second);
     }
 
     @Override
     public String toString() {
-        return String.format("(%d,%s)", intVal, it);
+
+      return String.format("(%d,%s)", first, second);
     }
 }

@@ -4,11 +4,16 @@ import java.util.Collection;
 import java.util.Iterator;
 
 /**
+ * ���ٽ�{@link Collection}ת��������
+ * <br/>
+ * ��������Ҳ��{@link Collection}
+ *
  * @author wolray
  */
 public interface CollectionSeq<T> extends SizedSeq<T>, Collection<T> {
     static <T> CollectionSeq<T> of(Collection<T> ts) {
-        return ts instanceof CollectionSeq ? (CollectionSeq<T>)ts : new Proxy<>(ts);
+
+      return ts instanceof CollectionSeq ? (CollectionSeq<T>) ts : new Proxy<>(ts);
     }
 
     class Proxy<T, C extends Collection<T>> implements CollectionSeq<T> {
@@ -19,14 +24,15 @@ public interface CollectionSeq<T> extends SizedSeq<T>, Collection<T> {
         }
 
         @Override
-        public int size() {
-            return backer.size();
-        }
-
-        @Override
         public boolean isEmpty() {
             return backer.isEmpty();
         }
+
+      @Override
+      public int size() {
+
+        return backer.size();
+      }
 
         @Override
         public boolean contains(Object o) {

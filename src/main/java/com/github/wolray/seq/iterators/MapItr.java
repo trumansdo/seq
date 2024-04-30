@@ -3,6 +3,8 @@ package com.github.wolray.seq.iterators;
 import java.util.Iterator;
 
 /**
+ * 可在获取每个数据时对数据进行map/reduce操作里面的map转换操作的迭代器
+ *
  * @author wolray
  */
 public abstract class MapItr<T, E> implements Iterator<E> {
@@ -11,8 +13,6 @@ public abstract class MapItr<T, E> implements Iterator<E> {
     public MapItr(Iterator<T> iterator) {
         this.iterator = iterator;
     }
-
-    public abstract E apply(T t);
 
     @Override
     public boolean hasNext() {
@@ -23,4 +23,11 @@ public abstract class MapItr<T, E> implements Iterator<E> {
     public E next() {
         return apply(iterator.next());
     }
+
+  /**
+   * 在迭代过程中对每个数据进行转换操作
+   *
+   * @return {@link E }
+   */
+  public abstract E apply(T t);
 }

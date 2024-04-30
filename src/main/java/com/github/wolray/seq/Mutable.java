@@ -4,6 +4,8 @@ import java.util.Optional;
 import java.util.concurrent.ForkJoinPool;
 
 /**
+ * �ɱ�����ݶ���������
+ *
  * @author wolray
  */
 public class Mutable<T> implements Lazy<T> {
@@ -13,12 +15,6 @@ public class Mutable<T> implements Lazy<T> {
 
     public Mutable(T it) {
         this.it = it;
-    }
-
-    protected void eval() {}
-
-    protected void eval(ForkJoinPool pool) {
-        eval();
     }
 
     @Override
@@ -31,6 +27,19 @@ public class Mutable<T> implements Lazy<T> {
         return it;
     }
 
+  /**
+   * �����ֶ�{@link #it}��ֵ
+   */
+  protected void eval() {
+
+  }
+
+  @Override
+  public boolean isSet() {
+
+    return isSet;
+  }
+
     @Override
     public synchronized final T forkJoin(ForkJoinPool pool) {
         if (isSet) {
@@ -41,15 +50,15 @@ public class Mutable<T> implements Lazy<T> {
         return it;
     }
 
-    @Override
-    public T set(T value) {
+  protected void eval(ForkJoinPool pool) {
+
+    eval();
+  }
+
+  @Override
+  public T set(T value) {
         isSet = true;
         return this.it = value;
-    }
-
-    @Override
-    public boolean isSet() {
-        return isSet;
     }
 
     public Optional<T> toOptional() {

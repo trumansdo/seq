@@ -5,11 +5,14 @@ import java.util.List;
 import java.util.ListIterator;
 
 /**
+ * ���ٽ�{@link List}ת��������
+ *
  * @author wolray
  */
 public interface ListSeq<T> extends SizedSeq<T>, List<T> {
     static <T> ListSeq<T> of(List<T> list) {
-        return list instanceof ListSeq ? (ListSeq<T>)list : new Proxy<>(list);
+
+      return list instanceof ListSeq ? (ListSeq<T>) list : new Proxy<>(list);
     }
 
     class Proxy<T> extends CollectionSeq.Proxy<T, List<T>> implements ListSeq<T> {

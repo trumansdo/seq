@@ -1,19 +1,20 @@
 package com.github.wolray.seq.pair;
 
 /**
+ * ��{@link Double}Ϊleft��{@link T}Ϊright��Pair
+ *
  * @author wolray
  */
-public class DoublePair<T> {
-    public double doubleVal;
-    public T it;
+public class DoublePair<T> extends Pair<Double, T> {
 
-    public DoublePair(double doubleVal, T it) {
-        this.doubleVal = doubleVal;
-        this.it = it;
+  public DoublePair(double first, T second) {
+
+    super(first, second);
     }
 
     @Override
     public String toString() {
-        return String.format("(%f,%s)", doubleVal, it);
+
+      return String.format("(%f,%s)", first, second);
     }
 }

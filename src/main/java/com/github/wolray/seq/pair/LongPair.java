@@ -1,19 +1,20 @@
 package com.github.wolray.seq.pair;
 
 /**
+ * ��{@link Long}Ϊleft��{@link T}Ϊright��Pair
+ *
  * @author wolray
  */
-public class LongPair<T> {
-    public long longVal;
-    public T it;
+public class LongPair<T> extends Pair<Long, T> {
 
-    public LongPair(long longVal, T it) {
-        this.longVal = longVal;
-        this.it = it;
+  public LongPair(long first, T second) {
+
+    super(first, second);
     }
 
     @Override
     public String toString() {
-        return String.format("(%d,%s)", longVal, it);
+
+      return String.format("(%d,%s)", first, second);
     }
 }

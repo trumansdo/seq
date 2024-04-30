@@ -3,11 +3,11 @@ package com.github.wolray.seq.pair;
 import static com.github.wolray.seq.Splitter.substring;
 
 import com.github.wolray.seq.BaseSeq;
-import com.github.wolray.seq.triple.TripleFunction;
+import com.github.wolray.seq.MapSeq;
 import com.github.wolray.seq.Mutable;
 import com.github.wolray.seq.Seq;
-import com.github.wolray.seq.MapSeq;
 import com.github.wolray.seq.triple.TripleConsumer;
+import com.github.wolray.seq.triple.TripleFunction;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -41,6 +41,26 @@ public interface PairSeq<K, V> extends BaseSeq<BiConsumer<K, V>> {
     return map instanceof MapSeq ? (MapSeq<K, V>) map : map::forEach;
   }
 
+  /**
+   * @see #parseMap(char[], char, char)
+   */
+  static PairSeq<String, String> parseMap(String s, char entrySep, char kvSep) {
+
+    return parseMap(s.toCharArray(), entrySep, kvSep);
+  }
+
+  /**
+   * 将字符串解析为键值对的二元流。类似：key:val|key:val|key:val|key:val的字符串
+   *
+   * @param chars
+   *     字符串
+   * @param entrySep
+   *     每个键值对之间的分隔符
+   * @param kvSep
+   *     键值的分隔符
+   *
+   * @return {@link PairSeq }<{@link String }, {@link String }>
+   */
   static PairSeq<String, String> parseMap(char[] chars, char entrySep, char kvSep) {
 
     return c -> {
@@ -64,11 +84,6 @@ public interface PairSeq<K, V> extends BaseSeq<BiConsumer<K, V>> {
     };
   }
 
-  static PairSeq<String, String> parseMap(String s, char entrySep, char kvSep) {
-
-    return parseMap(s.toCharArray(), entrySep, kvSep);
-  }
-
   static <K, V> PairSeq<K, V> unit(K k, V v) {
 
     return c -> c.accept(k, v);
@@ -78,6 +93,21 @@ public interface PairSeq<K, V> extends BaseSeq<BiConsumer<K, V>> {
 
     Seq<Pair<K, V>> pairSeq = paired().cache();
     return c -> pairSeq.consume(p -> c.accept(p.first, p.second));
+  }
+
+  /**
+   * 将key和value用{@link Pair}存放
+   *
+   * @return {@link Seq }<{@link Pair }<{@link K }, {@link V }>>
+   */
+  default Seq<Pair<K, V>> paired() {
+
+    return map(Pair::new);
+  }
+
+  default <T> Seq<T> map(BiFunction<K, V, T> function) {
+
+    return c -> consume((k, v) -> c.accept(function.apply(k, v)));
   }
 
   default PairSeq<K, V> filter(BiPredicate<K, V> predicate) {
@@ -107,6 +137,14 @@ public interface PairSeq<K, V> extends BaseSeq<BiConsumer<K, V>> {
     });
   }
 
+  /**
+   * 折叠，如{@link com.github.wolray.seq.ItrSeq#fold(Object, BiFunction)}
+   *
+   * @param init
+   * @param function
+   * @return {@link E }
+   * @author s-zengc
+   */
   default <E> E fold(E init, TripleFunction<E, K, V, E> function) {
 
     Mutable<E> m = new Mutable<>(init);
@@ -114,19 +152,26 @@ public interface PairSeq<K, V> extends BaseSeq<BiConsumer<K, V>> {
     return m.getIt();
   }
 
+  /**
+   * 返回key的流
+   *
+   * @return {@link Seq }<{@link K }>
+   * @author s-zengc
+   */
   default Seq<K> justKeys() {
 
     return c -> consume((k, v) -> c.accept(k));
   }
 
+  /**
+   * 返回value的流
+   *
+   * @return {@link Seq }<{@link V }>
+   * @author s-zengc
+   */
   default Seq<V> justValues() {
 
     return c -> consume((k, v) -> c.accept(v));
-  }
-
-  default <T> Seq<T> map(BiFunction<K, V, T> function) {
-
-    return c -> consume((k, v) -> c.accept(function.apply(k, v)));
   }
 
   default <T> PairSeq<T, V> mapKey(BiFunction<K, V, T> function) {
@@ -156,6 +201,12 @@ public interface PairSeq<K, V> extends BaseSeq<BiConsumer<K, V>> {
         p.set(k, v);
       }
     });
+  }
+
+  default <E> E reduce(E des, TripleConsumer<E, K, V> accumulator) {
+
+    consume((k, v) -> accumulator.accept(des, k, v));
+    return des;
   }
 
   default Pair<K, V> maxByValue(Comparator<V> comparator) {
@@ -190,17 +241,12 @@ public interface PairSeq<K, V> extends BaseSeq<BiConsumer<K, V>> {
     return c -> consumeTillStop(consumer.andThen(c));
   }
 
-  default Seq<Pair<K, V>> paired() {
-
-    return map(Pair::new);
-  }
-
-  default <E> E reduce(E des, TripleConsumer<E, K, V> accumulator) {
-
-    consume((k, v) -> accumulator.accept(des, k, v));
-    return des;
-  }
-
+  /**
+   * 交换key和value
+   *
+   * @return {@link PairSeq }<{@link V }, {@link K }>
+   * @author s-zengc
+   */
   default PairSeq<V, K> swap() {
 
     return c -> consume((k, v) -> c.accept(v, k));
@@ -209,6 +255,11 @@ public interface PairSeq<K, V> extends BaseSeq<BiConsumer<K, V>> {
   default MapSeq<K, V> toMap() {
 
     return toMap(new LinkedHashMap<>());
+  }
+
+  default MapSeq<K, V> toMap(Map<K, V> des) {
+
+    return MapSeq.of(reduce(des, Map::put));
   }
 
   default <A, B> MapSeq<A, B> toMap(BiFunction<K, V, A> toKey, BiFunction<K, V, B> toValue) {
@@ -221,16 +272,13 @@ public interface PairSeq<K, V> extends BaseSeq<BiConsumer<K, V>> {
     return MapSeq.of(reduce(des, (res, k, v) -> res.put(toKey.apply(k, v), toValue.apply(k, v))));
   }
 
-  default MapSeq<K, V> toMap(Map<K, V> des) {
-
-    return MapSeq.of(reduce(des, Map::put));
-  }
-
   class Empty {
 
-    static final PairSeq<Object, Object>    emptySeq = c -> {};
+    static final PairSeq<Object, Object> emptySeq = c -> {
+    };
 
-    static final BiConsumer<Object, Object> nothing  = (k, v) -> {};
+    static final BiConsumer<Object, Object> nothing = (k, v) -> {
+    };
 
   }
 

@@ -12,7 +12,8 @@ import java.util.function.Predicate;
  */
 public interface ExpandSeq<T> extends Function<T, Seq<T>> {
     static <T> ExpandSeq<T> of(Function<T, Seq<T>> function) {
-        return function instanceof ExpandSeq ? (ExpandSeq<T>)function : function::apply;
+
+      return function instanceof ExpandSeq ? (ExpandSeq<T>) function : function::apply;
     }
 
     default ExpandSeq<T> filter(Predicate<T> predicate) {
@@ -23,8 +24,9 @@ public interface ExpandSeq<T> extends Function<T, Seq<T>> {
         return t -> apply(t).filter(predicate.negate());
     }
 
-    default void scan(BiConsumer<T, ArraySeq<T>> c, T node) {
-        ArraySeq<T> sub = apply(node).filterNotNull().toList();
+  default void scan(BiConsumer<T, ArrayListSeq<T>> c, T node) {
+
+    ArrayListSeq<T> sub = apply(node).filterNotNull().toList();
         c.accept(node, sub);
         sub.consume(n -> scan(c, n));
     }
@@ -53,15 +55,17 @@ public interface ExpandSeq<T> extends Function<T, Seq<T>> {
         return t -> predicate.test(t) ? Seq.empty() : apply(t);
     }
 
-    default Map<T, ArraySeq<T>> toDAG(Seq<T> nodes) {
-        Map<T, ArraySeq<T>> map    = new HashMap<>();
-        ExpandSeq<T>        expand = terminate(t -> !map.containsKey(t));
+  default Map<T, ArrayListSeq<T>> toDAG(Seq<T> nodes) {
+
+    Map<T, ArrayListSeq<T>> map    = new HashMap<>();
+    ExpandSeq<T>            expand = terminate(t -> !map.containsKey(t));
         nodes.consume(t -> expand.scan(map::put, t));
         return map;
     }
 
-    default Map<T, ArraySeq<T>> toDAG(T node) {
-        Map<T, ArraySeq<T>> map = new HashMap<>();
+  default Map<T, ArrayListSeq<T>> toDAG(T node) {
+
+    Map<T, ArrayListSeq<T>> map = new HashMap<>();
         terminate(t -> !map.containsKey(t)).scan(map::put, node);
         return map;
     }

@@ -1,19 +1,24 @@
 package com.github.wolray.seq.pair;
 
 /**
+ * ��{@link Integer}Ϊleft��{@link Double}Ϊright��Pair
+ *
  * @author wolray
  */
-public class IntDoublePair {
-    public int intVal;
-    public double doubleVal;
+public class IntDoublePair extends Pair<Integer, Double> {
 
-    public IntDoublePair(int intVal, double doubleVal) {
-        this.intVal = intVal;
-        this.doubleVal = doubleVal;
+  public int first;
+
+  public double second;
+
+  public IntDoublePair(int first, double second) {
+
+    super(first, second);
     }
 
     @Override
     public String toString() {
-        return String.format("(%d,%f)", intVal, doubleVal);
+
+      return String.format("(%d,%f)", first, second);
     }
 }

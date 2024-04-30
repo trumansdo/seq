@@ -8,7 +8,9 @@ import java.util.NoSuchElementException;
 public final class StopException extends NoSuchElementException {
     static final StopException INSTANCE = new StopException();
 
-    private StopException() {}
+  private StopException() {
+
+  }
 
     @Override
     public synchronized Throwable fillInStackTrace() {

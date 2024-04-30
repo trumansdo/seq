@@ -3,11 +3,14 @@ package com.github.wolray.seq;
 import java.util.Queue;
 
 /**
+ * ���ٽ�{@link Queue}ת��������
+ *
  * @author wolray
  */
 public interface QueueSeq<T> extends SizedSeq<T>, Queue<T> {
     static <T> QueueSeq<T> of(Queue<T> queue) {
-        return queue instanceof QueueSeq ? (QueueSeq<T>)queue : new Proxy<>(queue);
+
+      return queue instanceof QueueSeq ? (QueueSeq<T>) queue : new Proxy<>(queue);
     }
 
     class Proxy<T> extends CollectionSeq.Proxy<T, Queue<T>> implements QueueSeq<T> {

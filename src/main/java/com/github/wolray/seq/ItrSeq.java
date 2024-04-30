@@ -4,44 +4,97 @@ import com.github.wolray.seq.iterators.MapItr;
 import com.github.wolray.seq.iterators.PickItr;
 import java.util.Iterator;
 import java.util.Optional;
-import java.util.function.*;
+import java.util.function.BiFunction;
+import java.util.function.BiPredicate;
+import java.util.function.Consumer;
+import java.util.function.Function;
+import java.util.function.Predicate;
 
 /**
+ * 可自我迭代的流
+ *
  * @author wolray
  */
 public interface ItrSeq<T> extends Iterable<T>, Seq<T> {
+
+  /**
+   * 消费就是循环
+   */
+  @Override
+  default void consume(Consumer<T> consumer) {
+
+    forEach(consumer);
+  }
+
+  @Override
+  default Optional<T> find(Predicate<T> predicate) {
+
+    for (T t : this) {
+      if (predicate.test(t)) {
+        return Optional.of(t);
+      }
+    }
+    return Optional.empty();
+  }
+
+  /**
+   * 将自己作为迭代对象
+   */
     @Override
     default ItrSeq<T> asIterable() {
+
         return this;
     }
 
     @Override
-    default void consume(Consumer<T> consumer) {
-        forEach(consumer);
+    default <E> ItrSeq<E> map(Function<T, E> function) {
+
+      return () -> ItrUtil.map(iterator(), function);
     }
 
-    @Override
+  /**
+   * 删除前面n个
+   */
+  @Override
     default ItrSeq<T> drop(int n) {
+
         return () -> ItrUtil.drop(iterator(), n);
     }
 
+  /**
+   * 按条件删除
+   */
     @Override
     default ItrSeq<T> dropWhile(Predicate<T> predicate) {
+
         return () -> ItrUtil.dropWhile(iterator(), predicate);
     }
 
-    @Override
+  /**
+   * 过滤
+   */
+  @Override
     default ItrSeq<T> filter(Predicate<T> predicate) {
+
         return predicate == null ? this : () -> ItrUtil.filter(iterator(), predicate);
     }
 
+    /**
+     * 按数据的类型过滤
+     *
+     * @param cls
+     * @return {@link ItrSeq }<{@link E }>
+     */
     @Override
     default <E> ItrSeq<E> filterInstance(Class<E> cls) {
-        return () -> new PickItr<E>() {
-            Iterator<T> iterator = iterator();
 
-            @Override
+        return () -> new PickItr<E>() {
+
+          final Iterator<T> iterator = iterator();
+
+          @Override
             public E pick() {
+
                 while (iterator.hasNext()) {
                     T t = iterator.next();
                     if (cls.isInstance(t)) {
@@ -53,76 +106,84 @@ public interface ItrSeq<T> extends Iterable<T>, Seq<T> {
         };
     }
 
-    @Override
-    default Optional<T> find(Predicate<T> predicate) {
-        for (T t : this) {
-            if (predicate.test(t)) {
-                return Optional.of(t);
-            }
-        }
-        return Optional.empty();
-    }
-
+    /**
+     * 获取第一个
+     *
+     * @return {@link T }
+     */
     @Override
     default T first() {
+
         for (T t : this) {
             return t;
         }
         return null;
     }
 
+    /**
+     * 展开二维可迭代对象
+     *
+     * @param function
+     * @return {@link ItrSeq }<{@link E }>
+     */
     @Override
     default <E> ItrSeq<E> flatIterable(Function<T, Iterable<E>> function) {
-        return () -> ItrUtil.flat(iterator(), function);
+
+      return () -> ItrUtil.flat(iterator(), function);
     }
 
-    @Override
+  @Override
     default <E> ItrSeq<E> flatOptional(Function<T, Optional<E>> function) {
-        return () -> ItrUtil.flatOptional(ItrUtil.map(iterator(), function));
-    }
 
-    @Override
-    default <E> E fold(E init, BiFunction<E, T, E> function) {
-        E acc = init;
-        for (T t : this) {
-            acc = function.apply(acc, t);
-        }
-        return acc;
-    }
+    return () -> ItrUtil.flatOptional(ItrUtil.map(iterator(), function));
+  }
 
-    @Override
+  @Override
     default T last() {
-        T res = null;
-        for (T t : this) {
+
+    T res = null;
+    for (T t : this) {
             res = t;
         }
         return res;
     }
 
-    @Override
-    default <E> ItrSeq<E> map(Function<T, E> function) {
-        return () -> ItrUtil.map(iterator(), function);
-    }
+  /**
+   * @see ItrUtil#map(Iterator, Function, int, Function)
+   */
+  @Override
+  default <E> ItrSeq<E> map(Function<T, E> function, int n, Function<T, E> substitute) {
 
-    @Override
-    default <E> ItrSeq<E> map(Function<T, E> function, int n, Function<T, E> substitute) {
-        return n <= 0 ? map(function) : () -> ItrUtil.map(iterator(), function, n, substitute);
-    }
+    return n <= 0 ? map(function) : () -> ItrUtil.map(iterator(), function, n, substitute);
+  }
 
-    @Override
-    default <E> ItrSeq<E> mapIndexed(IndexObjFunction<T, E> function) {
-        return () -> ItrUtil.mapIndexed(iterator(), function);
-    }
+  /**
+   * @see ItrUtil#mapIndexed(Iterator, IndexObjFunction)
+   */
+  @Override
+  default <E> ItrSeq<E> mapIndexed(IndexObjFunction<T, E> function) {
 
-    @Override
-    default <E> ItrSeq<E> mapMaybe(Function<T, E> function) {
-        return () -> new PickItr<E>() {
-            Iterator<T> iterator = iterator();
+    return () -> ItrUtil.mapIndexed(iterator(), function);
+  }
 
-            @Override
+  /**
+   * null的不处理
+   *
+   * @param function
+   * @return {@link ItrSeq }<{@link E }>
+   */
+  @Override
+  default <E> ItrSeq<E> mapMaybe(Function<T, E> function) {
+
+    return () -> new PickItr<E>() {
+
+      final Iterator<T> iterator = iterator();
+
+      @Override
             public E pick() {
-                while (iterator.hasNext()) {
-                    T t = iterator.next();
+
+        while (iterator.hasNext()) {
+          T t = iterator.next();
                     if (t != null) {
                         return function.apply(t);
                     }
@@ -132,15 +193,24 @@ public interface ItrSeq<T> extends Iterable<T>, Seq<T> {
         };
     }
 
-    @Override
-    default <E> ItrSeq<E> mapNotNull(Function<T, E> function) {
-        return () -> new PickItr<E>() {
-            Iterator<T> iterator = iterator();
+  /**
+   * 转换后的数据为空则直接跳过
+   *
+   * @param function
+   * @return {@link ItrSeq }<{@link E }>
+   */
+  @Override
+  default <E> ItrSeq<E> mapNotNull(Function<T, E> function) {
 
-            @Override
+    return () -> new PickItr<E>() {
+
+      final Iterator<T> iterator = iterator();
+
+      @Override
             public E pick() {
-                while (iterator.hasNext()) {
-                    E e = function.apply(iterator.next());
+
+        while (iterator.hasNext()) {
+          E e = function.apply(iterator.next());
                     if (e != null) {
                         return e;
                     }
@@ -150,9 +220,32 @@ public interface ItrSeq<T> extends Iterable<T>, Seq<T> {
         };
     }
 
-    @Override
-    default ItrSeq<T> onEach(Consumer<T> consumer) {
-        return map(t -> {
+  /**
+   * 折叠数据，就像是海浪一样，每个浪波是之前浪波的延续
+   *
+   * @param init
+   * @param function
+   * @return {@link E }
+   */
+  @Override
+  default <E> E fold(E init, BiFunction<E, T, E> function) {
+
+    E acc = init;
+    for (T t : this) {
+      acc = function.apply(acc, t);
+    }
+    return acc;
+  }
+
+  /**
+   * 类似Peek只消费不处理也不终止
+   *
+   * @return {@link ItrSeq }<{@link T }>
+   */
+  @Override
+  default ItrSeq<T> onEach(Consumer<T> consumer) {
+
+    return map(t -> {
             consumer.accept(t);
             return t;
         });
@@ -160,40 +253,70 @@ public interface ItrSeq<T> extends Iterable<T>, Seq<T> {
 
     @Override
     default ItrSeq<T> onEach(int n, Consumer<T> consumer) {
-        return map(t -> t, n, t -> {
+
+      return map(t -> t, n, t -> {
             consumer.accept(t);
             return t;
         });
     }
 
-    @Override
+  /**
+   * 在处理中折叠，就像是海浪一样，每个浪波是之前浪波的延续。
+   * <br/>
+   * 但不同于方法{@link #fold(Object, BiFunction)}是关注最后一个浪波的结果，而它关注每个浪波的形成过程
+   *
+   * @param init
+   * @param function
+   * @return {@link ItrSeq }<{@link E }>
+   */
+  @Override
     default <E> ItrSeq<E> runningFold(E init, BiFunction<E, T, E> function) {
-        return () -> new MapItr<T, E>(iterator()) {
-            E acc = init;
+
+    return () -> new MapItr<T, E>(iterator()) {
+
+      E acc = init;
 
             @Override
             public E apply(T t) {
-                return acc = function.apply(acc, t);
+
+              return acc = function.apply(acc, t);
             }
         };
     }
 
-    @Override
+  /**
+   * @see ItrUtil#take(Iterator, int)
+   */
+  @Override
     default ItrSeq<T> take(int n) {
-        return () -> ItrUtil.take(iterator(), n);
+
+    return () -> ItrUtil.take(iterator(), n);
     }
 
     @Override
     default <E> ItrSeq<T> takeWhile(Function<T, E> function, BiPredicate<E, E> testPrevCurr) {
-        return () -> ItrUtil.takeWhile(iterator(), function, testPrevCurr);
+
+      return () -> ItrUtil.takeWhile(iterator(), function, testPrevCurr);
     }
 
-    @Override
+  /**
+   * @see ItrUtil#takeWhile(Iterator, Predicate)
+   */
+  @Override
     default ItrSeq<T> takeWhile(Predicate<T> predicate) {
-        return () -> ItrUtil.takeWhile(iterator(), predicate);
+
+    return () -> ItrUtil.takeWhile(iterator(), predicate);
     }
 
-    default ItrSeq<T> zip(T t) {
-        return () -> ItrUtil.zip(iterator(), t);
-    }
+  /**
+   * 获取可以将指定数据插值压缩进流中的迭代器
+   *
+   * @param t 每个数据之间的插入数据
+   * @return {@link ItrSeq }<{@link T }>
+   */
+  default ItrSeq<T> zip(T t) {
+
+    return () -> ItrUtil.zip(iterator(), t);
+  }
+
 }

@@ -59,11 +59,6 @@ public interface TripleSeq<A, B, C> extends BaseSeq<TripleConsumer<A, B, C>> {
     return cs -> consume((a, b, c) -> cs.accept(c));
   }
 
-  default <T> Seq<T> map(TripleFunction<A, B, C, T> function) {
-
-    return cs -> consume((a, b, c) -> cs.accept(function.apply(a, b, c)));
-  }
-
   default <T> TripleSeq<T, B, C> mapFirst(TripleFunction<A, B, C, T> function) {
 
     return cs -> consume((a, b, c) -> cs.accept(function.apply(a, b, c), b, c));
@@ -99,6 +94,11 @@ public interface TripleSeq<A, B, C> extends BaseSeq<TripleConsumer<A, B, C>> {
     return map(Triple::new);
   }
 
+  default <T> Seq<T> map(TripleFunction<A, B, C, T> function) {
+
+    return cs -> consume((a, b, c) -> cs.accept(function.apply(a, b, c)));
+  }
+
   interface TriPredicate<A, B, D> {
 
     boolean test(A a, B b, D d);
@@ -107,9 +107,11 @@ public interface TripleSeq<A, B, C> extends BaseSeq<TripleConsumer<A, B, C>> {
 
   class Empty {
 
-    static final TripleSeq<Object, Object, Object> emptySeq = cs -> {};
+    static final TripleSeq<Object, Object, Object> emptySeq = cs -> {
+    };
 
-    static final TripleConsumer<Object, Object, Object> nothing = (a, b, c) -> {};
+    static final TripleConsumer<Object, Object, Object> nothing = (a, b, c) -> {
+    };
 
   }
 

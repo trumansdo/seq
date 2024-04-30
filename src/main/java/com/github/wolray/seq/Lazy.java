@@ -3,20 +3,23 @@ package com.github.wolray.seq;
 import com.github.wolray.seq.triple.TripleFunction;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.RecursiveTask;
-import java.util.function.*;
+import java.util.function.BiFunction;
+import java.util.function.Consumer;
+import java.util.function.Function;
+import java.util.function.Supplier;
+import java.util.function.UnaryOperator;
 
 /**
- * @author wolray
+ * �ӳٻ�ȡ������ݽӿڣ���չ{@link Supplier}�ӿ�
+ *
+ * @author s-zengc
+ * @version 1.0.0
+ * @date 2024/04/30 09:31:56
+ * @since 1.0.0
  */
 public interface Lazy<T> extends Supplier<T> {
-    T forkJoin(ForkJoinPool pool);
-
     static <T> Lazy<T> of(Seq<T> seq) {
         return seq.lazyLast();
-    }
-
-    static <A, T> Lazy<T> of(Supplier<A> s1, Function<A, T> function) {
-        return of(() -> function.apply(s1.get()));
     }
 
     static <A, B, T> Lazy<T> of(Supplier<A> s1, Supplier<B> s2, BiFunction<A, B, T> function) {
@@ -34,6 +37,59 @@ public interface Lazy<T> extends Supplier<T> {
             }
         };
     }
+
+  static <T> Supplier<T> submit(ForkJoinPool pool, Supplier<T> supplier) {
+
+    RecursiveTask<T> task;
+    if (supplier instanceof Lazy) {
+      Lazy<T> lazy = (Lazy<T>) supplier;
+      if (lazy.isSet()) {
+        return lazy;
+      } else {
+        task = new RecursiveTask<T>() {
+
+          @Override
+          protected T compute() {
+
+            return lazy.forkJoin(pool);
+          }
+        };
+      }
+    } else {
+      task = new RecursiveTask<T>() {
+
+        @Override
+        protected T compute() {
+
+          return supplier.get();
+        }
+      };
+    }
+    pool.submit(task);
+    return task::join;
+  }
+
+  static <T> Lazy<T> unset() {
+
+    return of(() -> {
+      throw new UnsetException();
+    });
+  }
+
+  static <T> Lazy<T> of(Supplier<T> supplier) {
+
+    if (supplier instanceof Lazy) {
+      return (Lazy<T>) supplier;
+    }
+    return new Mutable<T>(null) {
+
+      @Override
+      protected void eval() {
+
+        it = supplier.get();
+      }
+    };
+  }
 
     static <A, B, C, T> Lazy<T> of(Supplier<A> s1, Supplier<B> s2, Supplier<C> s3, TripleFunction<A, B, C, T> function) {
         return new Mutable<T>(null) {
@@ -109,49 +165,15 @@ public interface Lazy<T> extends Supplier<T> {
         };
     }
 
-    static <T> Lazy<T> of(Supplier<T> supplier) {
-        if (supplier instanceof Lazy) {
-            return (Lazy<T>)supplier;
-        }
-        return new Mutable<T>(null) {
-            @Override
-            protected void eval() {
-                it = supplier.get();
-            }
-        };
-    }
+  static <A, T> Lazy<T> of(Supplier<A> s1, Function<A, T> function) {
 
-    static <T> Supplier<T> submit(ForkJoinPool pool, Supplier<T> supplier) {
-        RecursiveTask<T> task;
-        if (supplier instanceof Lazy) {
-            Lazy<T> lazy = (Lazy<T>)supplier;
-            if (lazy.isSet()) {
-                return lazy;
-            } else {
-                task = new RecursiveTask<T>() {
-                    @Override
-                    protected T compute() {
-                        return lazy.forkJoin(pool);
-                    }
-                };
-            }
-        } else {
-            task = new RecursiveTask<T>() {
-                @Override
-                protected T compute() {
-                    return supplier.get();
-                }
-            };
-        }
-        pool.submit(task);
-        return task::join;
-    }
+    return of(() -> function.apply(s1.get()));
+  }
 
-    static <T> Lazy<T> unset() {
-        return of(() -> {
-            throw new UnsetException();
-        });
-    }
+  default boolean isSet() {
+
+    throw new UnsupportedOperationException();
+  }
 
     default Lazy<T> andThen(Consumer<T> consumer) {
         return of(() -> {
@@ -171,13 +193,11 @@ public interface Lazy<T> extends Supplier<T> {
         }
     }
 
-    default boolean isSet() {
-        throw new UnsupportedOperationException();
-    }
-
     default <E> Lazy<E> map(Function<T, E> function) {
         return of(this, function);
     }
+
+  T forkJoin(ForkJoinPool pool);
 
     default T set(T value) {
         throw new UnsupportedOperationException();
@@ -187,5 +207,6 @@ public interface Lazy<T> extends Supplier<T> {
         return of(operator.apply(this));
     }
 
-    class UnsetException extends RuntimeException {}
+  class UnsetException extends RuntimeException {
+  }
 }

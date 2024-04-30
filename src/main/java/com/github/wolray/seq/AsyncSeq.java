@@ -7,10 +7,12 @@ import java.util.function.Function;
  * @author wolray
  */
 public abstract class AsyncSeq<T> implements Seq<T> {
-    protected Object task;
-    protected boolean cancelled;
     protected final Async async;
     protected final Seq<T> source;
+
+  protected Object task;
+
+  protected boolean cancelled;
 
     AsyncSeq(Async async, Seq<T> source) {
         this.async = async;

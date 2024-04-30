@@ -1,6 +1,12 @@
 package com.github.wolray.seq;
 
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.Closeable;
+import java.io.IOException;
+import java.io.Reader;
+import java.io.UncheckedIOException;
+import java.io.Writer;
 import java.util.function.UnaryOperator;
 
 /**
@@ -9,16 +15,9 @@ import java.util.function.UnaryOperator;
 public interface IOChain<T> {
     T call() throws IOException;
 
-    static <T, E> E apply(T t, Function<T, E> function) {
-        try {
-            return function.apply(t);
-        } catch (IOException e) {
-            throw new UncheckedIOException(e);
-        }
-    }
+  static <T> IOChain<T> of(T t) {
 
-    static <T> IOChain<T> of(IOChain<T> supplier) {
-        return supplier;
+    return () -> t;
     }
 
     static IOChain<Void> of(Runnable runnable) {
@@ -28,23 +27,35 @@ public interface IOChain<T> {
         };
     }
 
-    static <T> IOChain<T> of(T t) {
-        return () -> t;
+  static <T> IOChain<T> of(IOChain<T> supplier) {
+
+    return supplier;
     }
 
     static IOChain<BufferedReader> ofReader(IOChain<Reader> supplier) {
-        return (Closable<BufferedReader>)() -> {
+
+      return (Closable<BufferedReader>) () -> {
             Reader reader = supplier.call();
-            return reader instanceof BufferedReader ? (BufferedReader)reader : new BufferedReader(reader);
+        return reader instanceof BufferedReader ? (BufferedReader) reader : new BufferedReader(reader);
         };
     }
 
     static IOChain<BufferedWriter> ofWriter(IOChain<Writer> supplier) {
-        return (Closable<BufferedWriter>)() -> {
+
+      return (Closable<BufferedWriter>) () -> {
             Writer writer = supplier.call();
-            return writer instanceof BufferedWriter ? (BufferedWriter)writer : new BufferedWriter(writer);
+        return writer instanceof BufferedWriter ? (BufferedWriter) writer : new BufferedWriter(writer);
         };
     }
+
+  static <T, E> E apply(T t, Function<T, E> function) {
+
+    try {
+      return function.apply(t);
+    } catch (IOException e) {
+      throw new UncheckedIOException(e);
+    }
+  }
 
     default <E> E apply(Function<T, E> function) {
         try {
@@ -71,7 +82,8 @@ public interface IOChain<T> {
     }
 
     default <C extends Closeable> IOChain<C> mapClosable(Function<T, C> function) {
-        return (Closable<C>)() -> function.apply(call());
+
+      return (Closable<C>) () -> function.apply(call());
     }
 
     default IOChain<T> peek(Consumer<T> consumer) {
@@ -90,6 +102,22 @@ public interface IOChain<T> {
             }
         });
     }
+
+  default void use(Consumer<T> consumer) {
+
+    useAndGet(consumer);
+  }
+
+  default T useAndGet(Consumer<T> consumer) {
+
+    try {
+      T t = call();
+      consumer.accept(t);
+      return t;
+    } catch (IOException e) {
+      throw new UncheckedIOException(e);
+    }
+  }
 
     default <E> Seq<E> toSeq(Function<T, E> provider, int n, UnaryOperator<E> replace) {
         return c -> use(t -> {
@@ -128,20 +156,6 @@ public interface IOChain<T> {
                 c.accept(provider.apply(t));
             }
         });
-    }
-
-    default void use(Consumer<T> consumer) {
-        useAndGet(consumer);
-    }
-
-    default T useAndGet(Consumer<T> consumer) {
-        try {
-            T t = call();
-            consumer.accept(t);
-            return t;
-        } catch (IOException e) {
-            throw new UncheckedIOException(e);
-        }
     }
 
     interface Closable<C extends Closeable> extends IOChain<C> {
