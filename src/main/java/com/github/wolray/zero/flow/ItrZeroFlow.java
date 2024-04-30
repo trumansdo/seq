@@ -100,7 +100,7 @@ public interface ItrZeroFlow<T> extends Iterable<T>, ZeroFlow<T> {
             return cls.cast(t);
           }
         }
-        return stop();
+        return ZeroFlow.stop();
       }
     };
   }
@@ -185,7 +185,7 @@ public interface ItrZeroFlow<T> extends Iterable<T>, ZeroFlow<T> {
             return function.apply(t);
           }
         }
-        return stop();
+        return ZeroFlow.stop();
       }
     };
   }
@@ -211,7 +211,7 @@ public interface ItrZeroFlow<T> extends Iterable<T>, ZeroFlow<T> {
             return e;
           }
         }
-        return stop();
+        return ZeroFlow.stop();
       }
     };
   }

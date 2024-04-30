@@ -122,7 +122,7 @@ public interface Async {
         checkState();
         task = submit(() -> source.consumeTillStop(t -> {
           if (cancelled) {
-            stop();
+            ZeroFlow.stop();
           }
           consumer.accept(t);
         }));
@@ -144,7 +144,7 @@ public interface Async {
         task = submit(() -> {
           source.consumeTillStop(t -> {
             if (cancelled) {
-              stop();
+              ZeroFlow.stop();
             }
             if (channel.isEmpty()) {
               channel.offer(t);
