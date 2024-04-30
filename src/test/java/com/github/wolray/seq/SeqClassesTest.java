@@ -18,52 +18,61 @@ import org.junit.Test;
  * @author wolray
  */
 public class SeqClassesTest {
-    public static final ExpandSeq<Class<?>> CLASS_EXPAND = cls -> Seq.of(cls.getInterfaces()).append(cls.getSuperclass());
+
+  public static final ExpandSeq<Class<?>> CLASS_EXPAND = cls -> Seq.of(cls.getInterfaces()).append(cls.getSuperclass());
 
   public static Graph graph(Map<Class<?>, ArrayListSeq<Class<?>>> map) {
-        Map<Class<?>, Pair<Class<?>, Node>> nodeMap = MapSeq.of(map).mapByValue((cls, parents) -> {
-            Node nd = Factory.node(cls.getSimpleName());
-            if (!cls.isInterface()) {
-                nd = nd.with(Shape.BOX);
-            }
-            return new Pair<>(cls, nd);
-        });
-        Seq<LinkSource> linkSources = c -> nodeMap.forEach((name, pair) -> {
-            Node curr = pair.second;
-            for (Class<?> parent : map.get(pair.first)) {
-                c.accept(nodeMap.get(parent).second.link(curr));
-            }
-        });
-        return Factory.graph("Classes").directed()
-            .graphAttr().with(Rank.dir(Rank.RankDir.LEFT_TO_RIGHT))
-            .nodeAttr().with(Font.name("Consolas"))
-            .linkAttr().with("class", "link-class")
-            .with(linkSources.toObjArray(LinkSource[]::new));
-    }
 
-    @Test
-    public void testClasses() {
-        Seq<Class<?>> ignore = Seq.of(BaseSeq.class, Object.class);
-      Map<Class<?>, ArrayListSeq<Class<?>>> map = CLASS_EXPAND
-            .filterNot(ignore.toSet()::contains)
-            .terminate(cls -> cls.getName().startsWith("java"))
-          .toDAG(Seq.of(ArrayListSeq.class, LinkedListSeq.class, ConcurrentQueueSeq.class, LinkedHashSetSeq.class,
-              BatchedSeq.class
-          ));
-        Graph graph = graph(map);
-        IOChain.apply(String.format("src/test/resources/%s.svg", "seq-classes"),
-            s -> Graphviz.fromGraph(graph).render(Format.SVG).toFile(new File(s)));
-    }
+    Map<Class<?>, Pair<Class<?>, Node>> nodeMap = MapSeq.of(map).mapByValue((cls, parents) -> {
+      Node nd = Factory.node(cls.getSimpleName());
+      if (!cls.isInterface()) {
+        nd = nd.with(Shape.BOX);
+      }
+      return new Pair<>(cls, nd);
+    });
+    Seq<LinkSource> linkSources = c -> nodeMap.forEach((name, pair) -> {
+      Node curr = pair.second;
+      for (Class<?> parent : map.get(pair.first)) {
+        c.accept(nodeMap.get(parent).second.link(curr));
+      }
+    });
+    return Factory.graph("Classes").directed()
+        .graphAttr().with(Rank.dir(Rank.RankDir.LEFT_TO_RIGHT))
+        .nodeAttr().with(Font.name("Consolas"))
+        .linkAttr().with("class", "link-class")
+        .with(linkSources.toObjArray(LinkSource[]::new));
+  }
 
-    @Test
-    public void testSeqMap() {
-        Seq<Class<?>> ignore = Seq.of(BaseSeq.class);
-      Map<Class<?>, ArrayListSeq<Class<?>>> map = CLASS_EXPAND
-            .filterNot(ignore.toSet()::contains)
-            .terminate(cls -> cls.getName().startsWith("java"))
-          .toDAG(Seq.of(LinkedHashMapSeq.class));
-        Graph graph = graph(map);
-        IOChain.apply(String.format("src/test/resources/%s.svg", "seq-map"),
-            s -> Graphviz.fromGraph(graph).render(Format.SVG).toFile(new File(s)));
-    }
+  @Test
+  public void testClasses() {
+
+    Seq<Class<?>> ignore = Seq.of(BaseSeq.class, Object.class);
+    Map<Class<?>, ArrayListSeq<Class<?>>> map = CLASS_EXPAND
+        .filterNot(ignore.toSet()::contains)
+        .terminate(cls -> cls.getName().startsWith("java"))
+        .toDAG(Seq.of(ArrayListSeq.class, LinkedListSeq.class, ConcurrentQueueSeq.class, LinkedHashSetSeq.class,
+            BatchedSeq.class
+        ));
+    Graph graph = graph(map);
+    IOChain.apply(
+        String.format("src/test/resources/%s.svg", "seq-classes"),
+        s -> Graphviz.fromGraph(graph).render(Format.SVG).toFile(new File(s))
+    );
+  }
+
+  @Test
+  public void testSeqMap() {
+
+    Seq<Class<?>> ignore = Seq.of(BaseSeq.class);
+    Map<Class<?>, ArrayListSeq<Class<?>>> map = CLASS_EXPAND
+        .filterNot(ignore.toSet()::contains)
+        .terminate(cls -> cls.getName().startsWith("java"))
+        .toDAG(Seq.of(LinkedHashMapSeq.class));
+    Graph graph = graph(map);
+    IOChain.apply(
+        String.format("src/test/resources/%s.svg", "seq-map"),
+        s -> Graphviz.fromGraph(graph).render(Format.SVG).toFile(new File(s))
+    );
+  }
+
 }
